@@ -1,0 +1,69 @@
+#!/usr/bin/env sh
+
+# suppress 'command not found' errors
+type sudo >/dev/null 2>&1 || sudo() { :; }
+type vcpkg >/dev/null 2>&1 || USE_LOCAL_VCPKG=1
+type vcpkg >/dev/null 2>&1 || vcpkg() { :; }
+
+export ZIGSDL='./deps/SDL.zig'
+export ZIGPATCHFILEPATH1="$ZIGSDL/src/wrapper/sdl.zig"
+export ZIGPATCHFILEPATH2="$ZIGSDL/src/wrapper/image.zig"
+
+DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/null" | head -n1 | sed -e 's/PRETTY_NAME=//' -e 's/"//g' -e 's/ /-/g' -e 's/\//-/g')
+
+if [ ! -e "$ZIGSDL" ]; then
+  echo installing/patching SDL wrapper
+  mkdir -p ./deps
+  cd ./deps
+  git clone https://github.com/MasterQ32/SDL.zig.git
+  cd ..
+
+  export SUBST_STR='s|pub const c = @import("sdl-native");|// zig-game hack...\n// pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL2/SDL.h");\n    @cInclude("SDL2/SDL_image.h");\n    @cInclude("SDL2/SDL_ttf.h");\n});|g'
+
+  if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin}" ]; then
+    sed -i '' -e "$SUBST_STR" $ZIGPATCHFILEPATH1
+    sed -i '' -e "$SUBST_STR" $ZIGPATCHFILEPATH2
+  else
+    sed -i -e "$SUBST_STR" $ZIGPATCHFILEPATH1
+    sed -i -e "$SUBST_STR" $ZIGPATCHFILEPATH2
+  fi
+  echo patched $ZIGPATCHFILEPATH1
+  echo patched $ZIGPATCHFILEPATH2
+else
+  echo "$ZIGSDL exists"
+  echo "- not patching $ZIGPATCHFILEPATH1"
+  echo "- not patching $ZIGPATCHFILEPATH2"
+fi
+
+if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
+  echo installing dependencies for msys
+  if [ -z "$USE_LOCAL_VCPKG" ]; then
+    echo "using system vcpkg"
+    vcpkg install
+  else
+    echo "using local vcpkg"
+    if [ ! -d vcpkg ]; then
+      git clone https://github.com/microsoft/vcpkg
+      ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+    fi
+    export VCPKG_DEFAULT_TRIPLET="x64-windows"
+    cd vcpkg && ./vcpkg install
+  fi
+elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
+  echo installing dependencies for OSX/x86_64
+  if [ ! -d vcpkg ]; then
+    git clone https://github.com/microsoft/vcpkg
+    ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+  fi
+  cd vcpkg && ./vcpkg install
+elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
+  echo installing dependencies for debian
+  sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
+  sudo apt-get install -y libogg-dev libvorbis-dev
+  # WSL2/Debian dependencies
+  sudo apt-get install -y automake libfreetype-dev libfreetype6 libfreetype6-dev libharfbuzz-dev
+else
+  echo unhandled distro: $DISTRO_NAME
+fi
+
+./generate-assets

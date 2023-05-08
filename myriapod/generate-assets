@@ -1,0 +1,66 @@
+#!/usr/bin/env sh
+
+echo "grabbing assets - please wait..."
+
+mkdir -p ./deps
+pushd ./deps
+[ ! -d "Code-the-Classics" ] && git clone https://github.com/Wireframe-Magazine/Code-the-Classics.git
+popd
+rm -rf ./src/zgzero/__gen
+mkdir -p ./src/zgzero/__gen
+cp -R ./deps/Code-the-Classics/myriapod-master/images ./src/zgzero/__gen/.
+cp -R ./deps/Code-the-Classics/myriapod-master/music ./src/zgzero/__gen/.
+cp -R ./deps/Code-the-Classics/myriapod-master/sounds ./src/zgzero/__gen/.
+
+# =============================================================================
+# generate sounds.zig
+
+echo "generating sound assets code - please wait..."
+
+GENFILE="./src/zgzero/__gen/sounds.zig"
+FILES=./src/zgzero/__gen/sounds/*
+
+S1="// generated code
+const zgame = @import("'"'zgame'"'"); // namespace
+const Sound = zgame.mixer.Sound;
+"
+S2="
+pub const Sounds = struct {"
+S3="
+    pub fn init() !Sounds {
+        return .{"
+S4="        };
+    }
+};"
+
+echo "$S1" >$GENFILE
+for FILE in $FILES; do
+    VAR_NAME=$(echo "${FILE##*/}" | cut -f 1 -d '.')
+    FILE_PATH="./sounds/${FILE##*/}"
+    echo "const $VAR_NAME = @embedFile("'"'$FILE_PATH'"'");" >>$GENFILE
+done
+echo "$S2" >>$GENFILE
+for FILE in $FILES; do
+    VAR_NAME=$(echo "${FILE##*/}" | cut -f 1 -d '.')
+    echo "    $VAR_NAME: Sound," >>$GENFILE
+done
+echo "$S3" >>$GENFILE
+for FILE in $FILES; do
+    VAR_NAME=$(echo "${FILE##*/}" | cut -f 1 -d '.')
+    echo "        .$VAR_NAME = try Sound.init($VAR_NAME)," >>$GENFILE
+done
+echo "$S4" >>$GENFILE
+
+# =============================================================================
+# generate images.zig
+
+echo "generating image assets code - please wait..."
+
+GENFILE="./src/zgzero/__gen/images.zig"
+FILES=./src/zgzero/__gen/images/*
+
+for FILE in $FILES; do
+    VAR_NAME=$(echo "${FILE##*/}" | cut -f 1 -d '.')
+    FILE_PATH="./images/${FILE##*/}"
+    echo "pub const $VAR_NAME = @embedFile("'"'$FILE_PATH'"'");" >>$GENFILE
+done
