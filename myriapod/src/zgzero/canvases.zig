@@ -39,3 +39,15 @@ pub fn space_list(list: *zgame.Canvas.List, renderer: zgame.sdl.Renderer) !void 
     try list.append(ps12);
     try list.append(ps13);
 }
+
+pub fn meanie_list(list: *zgame.Canvas.List, renderer: zgame.sdl.Renderer) !void {
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie00));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie01));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie02));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie10));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie11));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie12));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie20));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie21));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.meanie22));
+}

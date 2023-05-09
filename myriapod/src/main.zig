@@ -124,9 +124,12 @@ const GameContext = struct {
             .game = game,
         };
 
-        var factory = SpriteFactory.init(zg.renderer);
+        var factory = SpriteFactory.init(zg);
         var player_sprite = try SpriteFactory.player.new(factory, 0, 0);
         gctx.player = try gctx.playfield.add(player_sprite);
+
+        var enemy = try SpriteFactory.flying_enemy.new(factory, 100, 100);
+        _ = try gctx.playfield.add(enemy);
 
         return gctx;
     }
@@ -196,13 +199,17 @@ const state_play = struct {
             if (scancode == sdl.Scancode.space) {
                 gctx.mixer.sounds.laser0.play();
 
-                var factory = SpriteFactory.init(gctx.zg.renderer);
-                var bullet_sprite = try SpriteFactory.bullet.new(factory, pd.x, pd.y, -4);
+                var factory = SpriteFactory.init(gctx.zg);
+                var bullet_sprite = try SpriteFactory.bullet.new(factory, pd.x, pd.y, -8);
                 _ = try gctx.bullets.add(bullet_sprite);
             }
         }
 
-        gctx.bullets.update();
+        if (gctx.game.time.counter_ms > 50) {
+            gctx.bullets.update();
+            gctx.playfield.update();
+            gctx.game.time.reset();
+        }
     }
 
     fn draw(gctx: *GameContext) !void {

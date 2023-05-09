@@ -49,6 +49,13 @@ pub fn build(b: *std.build.Builder) void {
         const vcpkg_root = "./vcpkg_installed/x64-osx";
         exe.addIncludePath(vcpkg_root ++ "/include");
         exe.addLibraryPath(vcpkg_root ++ "/lib");
+
+        exe.linkSystemLibrary("freetype");
+        exe.linkSystemLibrary("ogg");
+        exe.linkSystemLibrary("png");
+        exe.linkSystemLibrary("vorbis");
+        exe.linkSystemLibrary("vorbisenc");
+        exe.linkSystemLibrary("vorbisfile");
     }
 
     if (exe.target.isLinux()) {

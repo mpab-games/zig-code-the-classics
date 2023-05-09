@@ -41,12 +41,19 @@ pub fn build(b: *std.Build) void {
     }
 
     // ...and also here - brew installation of vckpg not detected
-    // but ./bootstrap uses vckpg to pull down the files
+    // but bootstrap uses vckpg to pull down the files
     if (exe.target.isDarwin()) {
         try_vckpg = false;
         const vcpkg_root = "./vcpkg_installed/x64-osx";
         exe.addIncludePath(vcpkg_root ++ "/include");
         exe.addLibraryPath(vcpkg_root ++ "/lib");
+
+        exe.linkSystemLibrary("freetype");
+        exe.linkSystemLibrary("ogg");
+        exe.linkSystemLibrary("png");
+        exe.linkSystemLibrary("vorbis");
+        exe.linkSystemLibrary("vorbisenc");
+        exe.linkSystemLibrary("vorbisfile");
     }
 
     if (exe.target.isLinux()) {

@@ -6,6 +6,7 @@ const sdl = @import("zgame").sdl;
 const ZgSprite = Sprite;
 const zgzero = @import("zgzero/zgzero.zig");
 const images = zgzero.images;
+const FlyingEnemy = @import("sprites/flying_enemy.zig").FlyingEnemy;
 
 // Facade pattern
 pub const Sprite = union(enum) { // Facade
@@ -210,46 +211,46 @@ const Player = struct {
     }
 };
 
-const FlyingEnemy = struct {
-    const Self = FlyingEnemy;
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-    canvas: zgame.Canvas,
-    state: i32 = 0,
+// const FlyingEnemy = struct {
+//     const Self = FlyingEnemy;
+//     x: i32,
+//     y: i32,
+//     width: i32,
+//     height: i32,
+//     canvas: zgame.Canvas,
+//     state: i32 = 0,
 
-    fn destroy(self: *Self) void {
-        self.canvas.texture.destroy();
-    }
+//     fn destroy(self: *Self) void {
+//         self.canvas.texture.destroy();
+//     }
 
-    fn update(self: *Self) void {
-        _ = self;
-    }
+//     fn update(self: *Self) void {
+//         _ = self;
+//     }
 
-    fn draw(self: Self, zg: *ZigGame) void {
-        if (self.state < 0) return; // termination state < 0
-        self.canvas.blit_at(zg.renderer, self.x - (self.canvas.width >> 1), self.y - (self.canvas.height >> 1));
-    }
+//     fn draw(self: Self, zg: *ZigGame) void {
+//         if (self.state < 0) return; // termination state < 0
+//         self.canvas.blit_at(zg.renderer, self.x - (self.canvas.width >> 1), self.y - (self.canvas.height >> 1));
+//     }
 
-    pub fn size_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = 0,
-            .y = 0,
-            .width = self.width,
-            .height = self.height,
-        };
-    }
+//     pub fn size_rect(self: Self) sdl.Rectangle {
+//         return sdl.Rectangle{
+//             .x = 0,
+//             .y = 0,
+//             .width = self.width,
+//             .height = self.height,
+//         };
+//     }
 
-    pub fn position_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = self.x,
-            .y = self.y,
-            .width = self.width,
-            .height = self.height,
-        };
-    }
-};
+//     pub fn position_rect(self: Self) sdl.Rectangle {
+//         return sdl.Rectangle{
+//             .x = self.x,
+//             .y = self.y,
+//             .width = self.width,
+//             .height = self.height,
+//         };
+//     }
+// };
 
 const Rock = struct {
     const Self = Rock;
@@ -378,17 +379,17 @@ const Segment = struct {
 pub const Factory = struct {
     const Self = Factory;
     pub const Type = ZgSprite;
-    renderer: sdl.Renderer,
+    zg: *ZigGame,
 
-    pub fn init(renderer: sdl.Renderer) Factory {
+    pub fn init(zg: *ZigGame) Factory {
         return .{
-            .renderer = renderer,
+            .zg = zg,
         };
     }
 
     pub const player = struct {
         pub fn new(self: Self, x: i32, y: i32) !ZgSprite {
-            var canvas = try zgame.Canvas.loadPng(self.renderer, images.player00);
+            var canvas = try zgame.Canvas.loadPng(self.zg.renderer, images.player00);
             return .{ .player = .{
                 .x = x,
                 .y = y,
@@ -400,17 +401,9 @@ pub const Factory = struct {
     };
 
     pub const flying_enemy = struct {
-        pub fn new(canvas: zgame.Canvas, x: i32, y: i32, vel: i32, dx: i32, dy: i32) ZgSprite {
-            return .{ .flying_enemy = .{
-                .x = x,
-                .y = y,
-                .vel = vel,
-                .dx = dx,
-                .dy = dy,
-                .width = canvas.width,
-                .height = canvas.height,
-                .canvas = canvas,
-            } };
+        pub fn new(self: Self, x: i32, y: i32) !ZgSprite {
+            var fe = try FlyingEnemy.init(self.zg, x, y);
+            return .{ .flying_enemy = fe };
         }
     };
 
@@ -431,7 +424,7 @@ pub const Factory = struct {
 
     pub const bullet = struct {
         pub fn new(self: Self, x: i32, y: i32, dy: i32) !ZgSprite {
-            var canvas = try zgame.Canvas.loadPng(self.renderer, images.bullet);
+            var canvas = try zgame.Canvas.loadPng(self.zg.renderer, images.bullet);
             return .{ .bullet = .{ .x = x, .y = y, .width = canvas.width, .height = canvas.height, .canvas = canvas, .dy = dy } };
         }
     };
