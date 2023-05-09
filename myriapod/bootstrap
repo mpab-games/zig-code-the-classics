@@ -14,9 +14,7 @@ DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/n
 if [ ! -e "$ZIGSDL" ]; then
   echo installing/patching SDL wrapper
   mkdir -p ./deps
-  cd ./deps
-  git clone https://github.com/MasterQ32/SDL.zig.git
-  cd ..
+  pushd ./deps && git clone https://github.com/MasterQ32/SDL.zig.git && popd
 
   export SUBST_STR='s|pub const c = @import("sdl-native");|// zig-game hack...\n// pub const c = @import("sdl-native");\npub const c = @cImport({\n    @cInclude("SDL2/SDL.h");\n    @cInclude("SDL2/SDL_image.h");\n    @cInclude("SDL2/SDL_ttf.h");\n});|g'
 
@@ -47,7 +45,7 @@ if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#x86_64-Msys}" ]; then
       ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
     fi
     export VCPKG_DEFAULT_TRIPLET="x64-windows"
-    cd vcpkg && ./vcpkg install
+    pushd vcpkg && ./vcpkg install && popd
   fi
 elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
   echo installing dependencies for OSX/x86_64
@@ -55,7 +53,7 @@ elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
     git clone https://github.com/microsoft/vcpkg
     ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
   fi
-  cd vcpkg && ./vcpkg install
+  pushd vcpkg && ./vcpkg install && popd
 elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
   echo installing dependencies for debian
   sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
