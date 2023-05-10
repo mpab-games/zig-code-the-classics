@@ -1,5 +1,6 @@
 const std = @import("std");
 const dbg = std.log.debug;
+const info = std.log.info;
 const zgame = @import("zgame"); // namespace
 const ZigGame = zgame.ZigGame; // context
 const sdl = zgame.sdl;
@@ -278,10 +279,20 @@ pub fn main() !void {
     mixer.music.play("theme");
     mixer.music.set_volume(0.4);
 
+    var fps = zgzero.time.Ticker.init();
+    var frames: usize = 0;
+
     var running: bool = true;
     while (running) {
         running = try run_game(&gctx);
         gctx.zg.renderer.present();
+        fps.tick();
+        frames += 1;
+        if (fps.counter_ms >= 1000) {
+            info("fps={}", .{frames});
+            fps.reset();
+            frames = 0;
+        }
     }
 
     zgame.quit();
