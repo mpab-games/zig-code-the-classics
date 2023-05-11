@@ -15,7 +15,7 @@ cp -R ./deps/Code-the-Classics/myriapod-master/sounds ./src/zgzero/__gen/.
 # =============================================================================
 # generate sounds.zig
 
-echo "generating sound assets code - please wait..."
+echo "generating sound assets code..."
 
 GENFILE="./src/zgzero/__gen/sounds.zig"
 FILES=./src/zgzero/__gen/sounds/*
@@ -54,7 +54,7 @@ echo "$S4" >>$GENFILE
 # =============================================================================
 # generate images.zig
 
-echo "generating image assets code - please wait..."
+echo "generating image assets code..."
 
 GENFILE="./src/zgzero/__gen/images.zig"
 FILES=./src/zgzero/__gen/images/*
