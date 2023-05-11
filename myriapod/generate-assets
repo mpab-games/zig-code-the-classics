@@ -3,9 +3,9 @@
 echo "grabbing assets - please wait..."
 
 mkdir -p ./deps
-pushd ./deps
+cd ./deps
 [ ! -d "Code-the-Classics" ] && git clone https://github.com/Wireframe-Magazine/Code-the-Classics.git
-popd
+cd ..
 rm -rf ./src/zgzero/__gen
 mkdir -p ./src/zgzero/__gen
 cp -R ./deps/Code-the-Classics/myriapod-master/images ./src/zgzero/__gen/.
