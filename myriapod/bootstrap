@@ -56,7 +56,7 @@ elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
   cd vcpkg && ./vcpkg install && cd ..
 elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
   echo installing dependencies for debian
-  sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev
+  sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libsdl2-image-dev
   sudo apt-get install -y libogg-dev libvorbis-dev
   # WSL2/Debian dependencies
   sudo apt-get install -y automake libfreetype-dev libfreetype6 libfreetype6-dev libharfbuzz-dev
