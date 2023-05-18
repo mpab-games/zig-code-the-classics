@@ -401,8 +401,8 @@ pub const Factory = struct {
     };
 
     pub const flying_enemy = struct {
-        pub fn new(self: Self, x: i32, y: i32) !ZgSprite {
-            var fe = try FlyingEnemy.init(self.zg, x, y);
+        pub fn new(self: Self, player_x: i32) !ZgSprite {
+            var fe = try FlyingEnemy.init(self.zg, player_x);
             return .{ .flying_enemy = fe };
         }
     };

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+DISTRO_NAME=$(eval "(lsb_release -ds || cat /etc/*release || uname -om) 2>/dev/null" | head -n1 | sed -e 's/PRETTY_NAME=//' -e 's/"//g' -e 's/ /-/g' -e 's/\//-/g')
+
+if [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Darwin-x86_64}" ]; then
+    zig build run -Dtarget=x86_64-macos
+else
+    zig build run
+fi

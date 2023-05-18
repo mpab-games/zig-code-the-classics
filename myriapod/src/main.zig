@@ -129,7 +129,7 @@ const GameContext = struct {
         var player_sprite = try SpriteFactory.player.new(factory, 0, 0);
         gctx.player = try gctx.playfield.add(player_sprite);
 
-        var enemy = try SpriteFactory.flying_enemy.new(factory, 100, 100);
+        var enemy = try SpriteFactory.flying_enemy.new(factory, 100);
         _ = try gctx.playfield.add(enemy);
 
         return gctx;
@@ -279,20 +279,20 @@ pub fn main() !void {
     mixer.music.play("theme");
     mixer.music.set_volume(0.4);
 
-    var fps = zgzero.time.Ticker.init();
-    var frames: usize = 0;
+    // var fps = zgzero.time.Ticker.init();
+    // var frames: usize = 0;
 
     var running: bool = true;
     while (running) {
         running = try run_game(&gctx);
         gctx.zg.renderer.present();
-        fps.tick();
-        frames += 1;
-        if (fps.counter_ms >= 1000) {
-            info("fps={}", .{frames});
-            fps.reset();
-            frames = 0;
-        }
+        // fps.tick();
+        // frames += 1;
+        // if (fps.counter_ms >= 1000) {
+        //     info("fps={}", .{frames});
+        //     fps.reset();
+        //     frames = 0;
+        // }
     }
 
     zgame.quit();
