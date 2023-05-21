@@ -6,11 +6,17 @@ const zgzero = @import("../zgzero/zgzero.zig");
 const canvases = zgzero.canvases;
 const Prng = std.rand.DefaultPrng;
 
-pub fn choice(prng: *Prng, low: i32, high: i32) i32 {
-    // rand() % (high + 1 - low) + low
+// TODO: make this a template
+pub fn rand_range(prng: *Prng, low: i32, high: i32) i32 {
     var range: i32 = prng.random().int(i32);
     var result = @mod(range, high + 1 - low) + low;
     return result;
+}
+
+pub fn choice(prng: *Prng, items: []const i32) i32 {
+    var range: usize = prng.random().int(usize);
+    var index = @mod(range, items.len);
+    return items[index];
 }
 
 pub const FlyingEnemy = struct {
@@ -26,47 +32,55 @@ pub const FlyingEnemy = struct {
 
     frames: zgame.Canvas.List,
     anim_idx: usize = 0,
+    anim_timer: usize = 0,
     prng: Prng,
+    e_type: usize = 0,
 
     pub fn init(zg: *ZigGame, player_x: i32) !FlyingEnemy {
-        _ = player_x;
         var frames = zgame.Canvas.List.init(std.heap.page_allocator);
         try canvases.meanie_list(&frames, zg.renderer);
 
         const seed = @truncate(u64, @bitCast(u128, std.time.nanoTimestamp()));
         var prng = std.rand.DefaultPrng.init(seed);
 
-        // 0 - lhs; 1 - rhs
-        var side: i32 = 1; //choice(&prng, 0, 1);
-        // if (player_x < 160)
-        //     side = 1;
-        // if (player_x > 320)
-        //     side = 0;
-
-        var x: i32 = 550 * side - 35;
-        var y: i32 = 688;
-
-        var dx: i32 = 1 - 2 * side; //  # Move left or right depending on which side of the screen we're on
-        var dy: i32 = choice(&prng, -1, 1); // Start moving either up or down
-
-        //self.type = randint(0, 2)   # 3 different colours
-        //self.rnd.range();
-
-        return .{
-            .x = x,
-            .y = y,
-            .dx = dx,
-            .dy = dy,
+        var fe: FlyingEnemy = .{
             .frames = frames,
             .width = frames.items[0].width,
             .height = frames.items[0].height,
             .prng = prng,
         };
+
+        fe.reset(player_x);
+
+        return fe;
     }
 
     pub fn destroy(self: *Self) void {
         _ = self;
         //self.canvas.texture.destroy();
+    }
+
+    pub fn reset(self: *Self, player_x: i32) void {
+        var side: i32 = rand_range(&self.prng, 0, 1);
+        if (player_x < 160)
+            side = 1;
+        if (player_x > 320)
+            side = 0;
+
+        var x: i32 = 550 * side - 35;
+        var y: i32 = 688;
+
+        var dx: i32 = 1 - 2 * side; //  # Move left or right depending on which side of the screen we're on
+        var ud = [_]i32{ -1, 1 };
+        var dy: i32 = choice(&self.prng, &ud); // Start moving either up or down
+
+        var e_type = @intCast(usize, rand_range(&self.prng, 0, 2) * 3);
+
+        self.x = x;
+        self.y = y;
+        self.dx = dx;
+        self.dy = dy;
+        self.e_type = e_type;
     }
 
     pub fn update(self: *Self) void {
@@ -77,18 +91,19 @@ pub const FlyingEnemy = struct {
 
         if (self.y < 592 or self.y > 784) {
             // Gone too high or low - reverse y direction
-            self.moving_x = choice(&self.prng, 0, 1);
+            self.moving_x = rand_range(&self.prng, 0, 1);
             self.dy = -self.dy;
         }
 
-        //anim_frame = str([0, 2, 1, 2][(self.timer // 4) % 4])
-        //self.image = "meanie" + str(self.type) + anim_frame
-
-        self.anim_idx = (self.anim_idx + 1) % 3;
+        self.anim_timer = (self.anim_timer + 1) % 4;
+        if (0 == self.anim_timer) {
+            self.anim_idx = (self.anim_idx + 1) % 4;
+        }
     }
 
     pub fn draw(self: Self, zg: *ZigGame) void {
-        var c = self.frames.items[self.anim_idx + 6];
+        var frames = [_]usize{ 0, 2, 1, 2 };
+        var c = self.frames.items[frames[self.anim_idx] + self.e_type];
         var w = c.width;
         var h = c.height;
         c.blit_at(zg.renderer, self.x - (w >> 1), self.y - (h >> 1));

@@ -206,11 +206,11 @@ const state_play = struct {
             }
         }
 
-        if (gctx.game.time.counter_ms > 50) {
-            gctx.bullets.update();
-            gctx.playfield.update();
-            gctx.game.time.reset();
-        }
+        //if (gctx.game.time.counter_ms > 50) {
+        gctx.bullets.update();
+        gctx.playfield.update();
+        gctx.game.time.reset();
+        //}
     }
 
     fn draw(gctx: *GameContext) !void {
