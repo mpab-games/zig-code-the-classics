@@ -51,3 +51,171 @@ pub fn meanie_list(list: *zgame.Canvas.List, renderer: zgame.sdl.Renderer) !void
     try list.append(try zgame.Canvas.loadPng(renderer, images.meanie21));
     try list.append(try zgame.Canvas.loadPng(renderer, images.meanie22));
 }
+
+pub fn segment_list(list: *zgame.Canvas.List, renderer: zgame.sdl.Renderer) !void {
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00000));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00001));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00002));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00003));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00010));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00011));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00012));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00013));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00020));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00021));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00022));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00023));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00030));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00031));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00032));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00033));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00040));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00041));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00042));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00043));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00050));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00051));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00052));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00053));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00060));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00061));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00062));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00063));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00070));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00071));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00072));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00073));
+
+    // ------------------------------------------------------------------
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00100));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00101));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00102));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00103));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00110));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00111));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00112));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00113));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00120));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00121));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00122));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00123));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00130));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00131));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00132));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00133));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00140));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00141));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00142));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00143));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00150));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00151));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00152));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00153));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00160));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00161));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00162));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00163));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00170));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00171));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00172));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg00173));
+
+    // ------------------------------------------------------------------
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10000));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10001));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10002));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10003));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10010));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10011));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10012));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10013));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10020));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10021));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10022));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10023));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10030));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10031));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10032));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10033));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10040));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10041));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10042));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10043));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10050));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10051));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10052));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10053));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10060));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10061));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10062));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10063));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10070));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10071));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10072));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10073));
+
+    // ------------------------------------------------------------------
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10100));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10101));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10102));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10103));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10110));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10111));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10112));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10113));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10120));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10121));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10122));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10123));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10130));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10131));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10132));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10133));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10140));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10141));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10142));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10143));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10150));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10151));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10152));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10153));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10160));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10161));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10162));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10163));
+
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10170));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10171));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10172));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.seg10173));
+}
