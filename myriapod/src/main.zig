@@ -19,6 +19,10 @@ const PLYR_START_X = 240;
 const PLYR_START_Y = 768;
 const PRESS_START_Y = 420;
 
+fn range(len: usize) []const void {
+    return @as([*]void, undefined)[0..len];
+}
+
 const GameState = enum {
     MENU,
     PLAY,
@@ -96,6 +100,7 @@ const Game = struct {
 };
 
 const GameContext = struct {
+    const Self = GameContext;
     zg: *ZigGame,
     mixer: *zgzero.mixer.Mixer,
     font: *zgzero.font.Font,
@@ -104,6 +109,7 @@ const GameContext = struct {
     player_score_edit_pos: usize = 0,
     game_state: GameState = GameState.GAME_OVER,
     bounds: sdl.Rectangle,
+    factory: SpriteFactory,
     playfield: zgame.sprite.Group(SpriteFactory.Type) = .{},
     bullets: zgame.sprite.Group(SpriteFactory.Type) = .{},
 
@@ -115,24 +121,44 @@ const GameContext = struct {
 
     game: Game,
 
-    pub fn init(zg: *ZigGame, mixer: *zgzero.mixer.Mixer, font: *zgzero.font.Font) !GameContext {
+    pub fn init(zg: *ZigGame, mixer: *zgzero.mixer.Mixer, font: *zgzero.font.Font) !Self {
         var game = try Game.init(zg);
-        var gctx: GameContext = .{
+        var gctx: Self = .{
             .zg = zg,
             .mixer = mixer,
             .font = font,
             .bounds = sdl.Rectangle{ .x = 0, .y = 0, .width = zg.size.width_pixels, .height = zg.size.height_pixels },
             .game = game,
+            .factory = SpriteFactory.init(zg),
         };
 
-        var factory = SpriteFactory.init(zg);
-        var player_sprite = try SpriteFactory.player.new(factory, 0, 0);
+        var player_sprite = try SpriteFactory.player.new(gctx.factory, 0, 0);
         gctx.player = try gctx.playfield.add(player_sprite);
 
-        var enemy = try SpriteFactory.flying_enemy.new(factory, 100);
+        var enemy = try SpriteFactory.flying_enemy.new(gctx.factory, 100);
         _ = try gctx.playfield.add(enemy);
 
         return gctx;
+    }
+
+    fn add_segments(self: *Self) void {
+
+        //        game.play_sound("wave");
+        //self.wave += 1;
+        self.time = 0;
+        //self.segments = [];
+        var num_segments = 8 + self.wave; // 4 * 2   # On the first four waves there are 8 segments - then 10, and so on
+        for (range(num_segments)) |_, i| {
+            var cell_x = -1 - i;
+            var cell_y = 0;
+            // Determines whether segments take one or two hits to kill, based on the wave number.
+            // e.g. on wave 0 all segments take one hit; on wave 1 they alternate between one and two hits
+            var health = 1; //[[1,1],[1,2],[2,2],[1,1]][self.wave % 4][i % 2];
+            var fast = self.wave % 4 == 3; // Every fourth myriapod moves faster than usual
+            var head = i == 0; // The first segment of each myriapod is the head
+            var segment = try SpriteFactory.segments.new(self.factory, cell_x, cell_y, health, fast, head);
+            self.segments.append(segment);
+        }
     }
 };
 

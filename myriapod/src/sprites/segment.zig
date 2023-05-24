@@ -24,7 +24,7 @@ const DIRECTION_RIGHT = 1;
 const DIRECTION_DOWN = 2;
 const DIRECTION_LEFT = 3;
 
-fn inverse_direction(dir) i32 {
+fn inverse_direction(dir: i32) i32 {
     switch (dir) {
         .DIRECTION_UP => return DIRECTION_DOWN,
         .DIRECTION_DOWN => return DIRECTION_UP,
@@ -32,6 +32,13 @@ fn inverse_direction(dir) i32 {
         .DIRECTION_RIGHT => return DIRECTION_LEFT,
     }
 }
+
+fn is_horizontal(dir: i32) bool {
+    return dir == DIRECTION_LEFT or dir == DIRECTION_RIGHT;
+}
+
+var DX = [_]i32{ 0, 1, 0, -1 };
+var DY = [_]i32{ -1, 0, 1, 0 };
 
 pub const Segment = struct {
     const Self = Segment;
