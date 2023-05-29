@@ -4,13 +4,13 @@ const ZigGame = zgame.ZigGame;
 const sdl = @import("sdl-wrapper"); // configured in build.zig
 
 // uses the visitor pattern to forward calls to implementing classes
-pub fn Group(comptime Type: type) type {
+pub fn Group(comptime T1: type, comptime T2: type) type {
     const Context = ZigGame;
-    const CollisionResult = struct { collided: bool, index: usize, item: ?*Type };
+    const CollisionResult = struct { collided: bool, index: usize, item: ?*T1 };
     return struct {
         const Self = @This();
 
-        pub const CollectionArrayList = std.ArrayList(Type);
+        pub const CollectionArrayList = std.ArrayList(T1);
         list: CollectionArrayList = CollectionArrayList.init(std.heap.page_allocator),
 
         pub fn destroy(self: *Self) void {
@@ -22,20 +22,20 @@ pub fn Group(comptime Type: type) type {
             self.list.clearAndFree();
         }
 
-        pub fn add(self: *Self, item: Type) !usize {
+        pub fn add(self: *Self, item: T1) !usize {
             try self.list.append(item);
             return self.list.items.len - 1;
         }
 
-        pub fn remove(self: *Self, index: usize) Type {
+        pub fn remove(self: *Self, index: usize) T1 {
             return self.list.swapRemove(index);
         }
 
-        pub fn update(self: Self) void {
+        pub fn update(self: Self, t2: *T2) void {
             var idx: usize = 0;
             while (idx != self.list.items.len) : (idx += 1) {
                 var s = &self.list.items[idx];
-                s.update();
+                s.update(t2);
             }
         }
 
@@ -45,7 +45,7 @@ pub fn Group(comptime Type: type) type {
             }
         }
 
-        pub fn collision(self: Self, s1: *Type) CollisionResult {
+        pub fn collision(self: Self, s1: *T1) CollisionResult {
             var idx: usize = 0;
             while (idx != self.list.items.len) : (idx += 1) {
                 var s2 = &self.list.items[idx];

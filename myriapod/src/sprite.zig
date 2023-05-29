@@ -7,6 +7,10 @@ const ZgSprite = Sprite;
 const zgzero = @import("zgzero/zgzero.zig");
 const images = zgzero.images;
 const FlyingEnemy = @import("sprites/flying_enemy.zig").FlyingEnemy;
+const Segment = @import("sprites/segment.zig").Segment;
+const Player = @import("sprites/player.zig").Player;
+const Rock = @import("sprites/rock.zig").Rock;
+const gc = @import("game_common.zig");
 
 // Facade pattern
 pub const Sprite = union(enum) { // Facade
@@ -19,6 +23,7 @@ pub const Sprite = union(enum) { // Facade
         dy: i32 = 0,
         vel: i32 = 0,
         state: i32 = 0,
+        health: i32 = 0,
     };
 
     player: Player,
@@ -69,11 +74,12 @@ pub const Sprite = union(enum) { // Facade
                 d.state = s.state;
             },
             .segment => |s| {
-                d.x = s.x;
-                d.y = s.y;
-                d.width = s.width;
-                d.height = s.height;
-                d.state = s.state;
+                _ = s;
+                d.x = 0;
+                d.y = 0;
+                d.width = 0;
+                d.height = 0;
+                d.state = 0;
             },
         }
         return d;
@@ -110,11 +116,12 @@ pub const Sprite = union(enum) { // Facade
                 s.state = d.state;
             },
             .segment => |*s| {
-                s.x = d.x;
-                s.y = d.y;
-                s.width = d.width;
-                s.height = d.height;
-                s.state = d.state;
+                _ = s;
+                // s.x = d.x;
+                // s.y = d.y;
+                // s.width = d.width;
+                // s.height = d.height;
+                // s.state = d.state;
             },
         }
     }
@@ -129,13 +136,13 @@ pub const Sprite = union(enum) { // Facade
         }
     }
 
-    pub fn update(self: *Sprite) void {
+    pub fn update(self: *Sprite, game: *gc.Game) void {
         switch (self.*) {
-            .player => |*s| s.update(),
-            .flying_enemy => |*s| s.update(),
-            .rock => |*s| s.update(),
-            .bullet => |*s| s.update(),
-            .segment => |*s| s.update(),
+            .player => |*s| s.update(game),
+            .flying_enemy => |*s| s.update(game),
+            .rock => |*s| s.update(game),
+            .bullet => |*s| s.update(game),
+            .segment => |*s| s.update(game),
         }
     }
 
@@ -170,129 +177,6 @@ pub const Sprite = union(enum) { // Facade
     }
 };
 
-const Player = struct {
-    const Self = Player;
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-    canvas: zgame.Canvas,
-    state: i32 = 0,
-
-    fn destroy(self: *Self) void {
-        self.canvas.texture.destroy();
-    }
-
-    fn update(self: *Self) void {
-        _ = self;
-    }
-
-    fn draw(self: Self, zg: *ZigGame) void {
-        if (self.state < 0) return; // termination state < 0
-        self.canvas.blit_at(zg.renderer, self.x - (self.canvas.width >> 1), self.y - (self.canvas.height >> 1));
-    }
-
-    pub fn size_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = 0,
-            .y = 0,
-            .width = self.width,
-            .height = self.height,
-        };
-    }
-
-    pub fn position_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = self.x - (self.width >> 1),
-            .y = self.y - (self.height >> 1),
-            .width = self.width,
-            .height = self.height,
-        };
-    }
-};
-
-// const FlyingEnemy = struct {
-//     const Self = FlyingEnemy;
-//     x: i32,
-//     y: i32,
-//     width: i32,
-//     height: i32,
-//     canvas: zgame.Canvas,
-//     state: i32 = 0,
-
-//     fn destroy(self: *Self) void {
-//         self.canvas.texture.destroy();
-//     }
-
-//     fn update(self: *Self) void {
-//         _ = self;
-//     }
-
-//     fn draw(self: Self, zg: *ZigGame) void {
-//         if (self.state < 0) return; // termination state < 0
-//         self.canvas.blit_at(zg.renderer, self.x - (self.canvas.width >> 1), self.y - (self.canvas.height >> 1));
-//     }
-
-//     pub fn size_rect(self: Self) sdl.Rectangle {
-//         return sdl.Rectangle{
-//             .x = 0,
-//             .y = 0,
-//             .width = self.width,
-//             .height = self.height,
-//         };
-//     }
-
-//     pub fn position_rect(self: Self) sdl.Rectangle {
-//         return sdl.Rectangle{
-//             .x = self.x,
-//             .y = self.y,
-//             .width = self.width,
-//             .height = self.height,
-//         };
-//     }
-// };
-
-const Rock = struct {
-    const Self = Rock;
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-    canvas: zgame.Canvas,
-    state: i32 = 0,
-
-    fn destroy(self: *Self) void {
-        self.canvas.texture.destroy();
-    }
-
-    fn update(self: *Self) void {
-        _ = self;
-    }
-
-    fn draw(self: Self, zg: *ZigGame) void {
-        if (self.state < 0) return; // termination state < 0
-        self.canvas.blit_at(zg.renderer, self.x - (self.canvas.width >> 1), self.y - (self.canvas.height >> 1));
-    }
-
-    pub fn size_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = 0,
-            .y = 0,
-            .width = self.width,
-            .height = self.height,
-        };
-    }
-
-    pub fn position_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = self.x,
-            .y = self.y,
-            .width = self.width,
-            .height = self.height,
-        };
-    }
-};
-
 const Bullet = struct {
     const Self = Bullet;
     x: i32,
@@ -307,8 +191,9 @@ const Bullet = struct {
         self.canvas.texture.destroy();
     }
 
-    fn update(self: *Self) void {
+    pub fn update(self: *Self, game: *gc.Game) void {
         self.y += self.dy;
+        _ = game;
     }
 
     fn draw(self: Self, zg: *ZigGame) void {
@@ -329,47 +214,6 @@ const Bullet = struct {
         return sdl.Rectangle{
             .x = self.x - (self.width >> 1),
             .y = self.y - (self.height >> 1),
-            .width = self.width,
-            .height = self.height,
-        };
-    }
-};
-
-const Segment = struct {
-    const Self = Segment;
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-    canvas: zgame.Canvas,
-    state: i32 = 0,
-
-    fn destroy(self: *Self) void {
-        self.canvas.texture.destroy();
-    }
-
-    fn update(self: *Self) void {
-        _ = self;
-    }
-
-    fn draw(self: Self, zg: *ZigGame) void {
-        if (self.state < 0) return; // termination state < 0
-        self.canvas.blit_at(zg.renderer, self.x - (self.canvas.width >> 1), self.y - (self.canvas.height >> 1));
-    }
-
-    pub fn size_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = 0,
-            .y = 0,
-            .width = self.width,
-            .height = self.height,
-        };
-    }
-
-    pub fn position_rect(self: Self) sdl.Rectangle {
-        return sdl.Rectangle{
-            .x = self.x,
-            .y = self.y,
             .width = self.width,
             .height = self.height,
         };
@@ -430,17 +274,16 @@ pub const Factory = struct {
     };
 
     pub const segment = struct {
-        pub fn new(canvas: zgame.Canvas, x: i32, y: i32, vel: i32, dx: i32, dy: i32) ZgSprite {
-            return .{ .segment = .{
-                .x = x,
-                .y = y,
-                .vel = vel,
-                .dx = dx,
-                .dy = dy,
-                .width = canvas.width,
-                .height = canvas.height,
-                .canvas = canvas,
-            } };
+        pub fn new(self: Self, cx: i32, cy: i32, health: i32, fast: bool, head: bool) !ZgSprite {
+            var s = try Segment.init(
+                self.zg,
+                cx,
+                cy,
+                health,
+                fast,
+                head,
+            );
+            return .{ .segment = s };
         }
     };
 };

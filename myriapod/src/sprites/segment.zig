@@ -1,47 +1,112 @@
 const std = @import("std");
 const zgame = @import("zgame"); // namespace
+const zgu = zgame.util; // namespace
 const ZigGame = zgame.ZigGame; // context
 const sdl = @import("zgame").sdl;
 const zgzero = @import("../zgzero/zgzero.zig");
 const canvases = zgzero.canvases;
-const Prng = std.rand.DefaultPrng;
+const gc = @import("../game_common.zig");
 
-// TODO: make this a template
-pub fn rand_range(prng: *Prng, low: i32, high: i32) i32 {
-    var range: i32 = prng.random().int(i32);
-    var result = @mod(range, high + 1 - low) + low;
-    return result;
-}
-
-pub fn choice(prng: *Prng, items: []const i32) i32 {
-    var range: usize = prng.random().int(usize);
-    var index = @mod(range, items.len);
-    return items[index];
-}
-
-const DIRECTION_UP = 0;
-const DIRECTION_RIGHT = 1;
-const DIRECTION_DOWN = 2;
-const DIRECTION_LEFT = 3;
-
-fn inverse_direction(dir: i32) i32 {
+fn to_i32(dir: gc.Direction) i32 {
     switch (dir) {
-        .DIRECTION_UP => return DIRECTION_DOWN,
-        .DIRECTION_DOWN => return DIRECTION_UP,
-        .DIRECTION_LEFT => return DIRECTION_RIGHT,
-        .DIRECTION_RIGHT => return DIRECTION_LEFT,
+        .UP => return 0,
+        .RIGHT => return 1,
+        .DOWN => return 2,
+        .LEFT => return 3,
     }
 }
 
-fn is_horizontal(dir: i32) bool {
-    return dir == DIRECTION_LEFT or dir == DIRECTION_RIGHT;
+fn inverse_direction(dir: gc.Direction) gc.Direction {
+    switch (dir) {
+        .UP => return gc.Direction.DOWN,
+        .DOWN => return gc.Direction.UP,
+        .LEFT => return gc.Direction.RIGHT,
+        .RIGHT => return gc.Direction.LEFT,
+    }
 }
 
-var DX = [_]i32{ 0, 1, 0, -1 };
-var DY = [_]i32{ -1, 0, 1, 0 };
+fn is_horizontal(dir: gc.Direction) bool {
+    return dir == gc.Direction.LEFT or dir == gc.Direction.RIGHT;
+}
+
+const DX = [_]i32{ 0, 1, 0, -1 };
+const DY = [_]i32{ -1, 0, 1, 0 };
+
+const SECONDARY_AXIS_SPEED = [_]i32{ 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2 };
+const SECONDARY_AXIS_POSITIONS = [_]i32{ 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14 };
+
+const ROTATION_MATRICES = [4][4]i32{
+    [_]i32{ 1, 0, 0, 1 },
+    [_]i32{ 0, -1, 1, 0 },
+    [_]i32{ -1, 0, 0, -1 },
+    [_]i32{ 0, 1, -1, 0 },
+};
+
+const rank_fn = fn (*Segment, i32) i32;
+
+const Ranking = struct {
+    out: bool,
+    turning_back_on_self: bool,
+    direction_disallowed: bool,
+    occupied_by_segmen: bool,
+    rock_present: bool,
+    horizontal_blocked: bool,
+    same_as_previous_x_direction: bool,
+};
+
+fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Ranking {
+    var new_cell_x = seg.cell_x + DX[proposed_out_edge];
+    var new_cell_y = seg.cell_y + DY[proposed_out_edge];
+
+    var out = new_cell_x < 0 or new_cell_x > (gc.num_grid_cols - 1) or (new_cell_y < 0) or new_cell_y > (gc.num_grid_rows - 1);
+
+    var turning_back_on_self = proposed_out_edge == seg.in_edge;
+
+    var direction_disallowed = proposed_out_edge == seg.disallow_direction;
+
+    var rock: i32 = undefined;
+
+    if (out or (new_cell_y == 0 and new_cell_x < 0)) {
+        rock = 0;
+    } else {
+        rock = gc.grid[new_cell_y][new_cell_x];
+    }
+
+    var rock_present: bool = rock != 0;
+    var o1: gc.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y };
+    var o2: gc.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y, .dir = proposed_out_edge };
+
+    var occupied_by_segment = game.occupied.in(&o1) or game.occupied.in(&o2);
+
+    var horizontal_blocked: bool = undefined;
+
+    if (rock_present) {
+        horizontal_blocked = is_horizontal(proposed_out_edge);
+    } else {
+        horizontal_blocked = !is_horizontal(proposed_out_edge);
+    }
+
+    var same_as_previous_x_direction = proposed_out_edge == seg.previous_x_direction;
+
+    return .{
+        .out = out,
+        .turning_back_on_self = turning_back_on_self,
+        .direction_disallowed = direction_disallowed,
+        .occupied_by_segment = occupied_by_segment,
+        .rock_present = rock_present,
+        .horizontal_blocked = horizontal_blocked,
+        .same_as_previous_x_direction = same_as_previous_x_direction,
+    };
+}
+
+// fn rank(seg: *Segment) rank_fn {
+//     return ranker(seg);
+// }
 
 pub const Segment = struct {
     const Self = Segment;
+    x: i32 = 0,
+    y: i32 = 0,
     cell_x: i32,
     cell_y: i32,
 
@@ -49,32 +114,27 @@ pub const Segment = struct {
     fast: bool,
 
     head: bool, // Should this segment use the head sprite?
-    in_edge: i32 = DIRECTION_LEFT,
-    out_edge: i32 = DIRECTION_RIGHT,
+    in_edge: gc.Direction = gc.Direction.LEFT,
+    out_edge: gc.Direction = gc.Direction.RIGHT,
 
-    disallow_direction: i32 = DIRECTION_UP, // Prevents segment from moving in a particular direction
-    previous_x_direction: i32 = 1, // Used to create winding/snaking motion
+    disallow_direction: gc.Direction = gc.Direction.UP, // Prevents segment from moving in a particular direction
+    previous_x_direction: usize = 1, // Used to create winding/snaking motion
 
     frames: zgame.Canvas.List,
     anim_idx: usize = 0,
     anim_timer: usize = 0,
-    prng: Prng,
-    e_type: usize = 0,
+    time: i32 = 0,
 
-    pub fn init(zg: *ZigGame, cx: i32, cy: i32, health: i32, fast: bool, head: bool) !Segment {
+    pub fn init(zg: *ZigGame, cell_x: i32, cell_y: i32, health: i32, fast: bool, head: bool) !Segment {
         var frames = zgame.Canvas.List.init(std.heap.page_allocator);
         try canvases.segment_list(&frames, zg.renderer);
 
-        const seed = @truncate(u64, @bitCast(u128, std.time.nanoTimestamp()));
-        var prng = std.rand.DefaultPrng.init(seed);
-
         var s: Segment = .{
             .frames = frames,
-            .width = frames.items[0].width,
-            .height = frames.items[0].height,
-            .prng = prng,
-            .cx = cx,
-            .cy = cy,
+            //.width = frames.items[0].width,
+            //.height = frames.items[0].height,
+            .cell_x = cell_x,
+            .cell_y = cell_y,
             .health = health,
             .fast = fast,
             .head = head,
@@ -88,27 +148,65 @@ pub const Segment = struct {
         //self.canvas.texture.destroy();
     }
 
-    pub fn update(self: *Self) void {
+    pub fn update(self: *Self, game: *gc.Game) void {
+        var phase: usize = @mod(@intCast(usize, self.time), 16);
+        //var phase_sz = @intCast(usize, self.time);
+        var out_edge_sz: usize = @enumToInt(self.out_edge);
 
-        // Move
-        self.x += self.dx * self.moving_x * (3 - @floatToInt(i32, @fabs(@intToFloat(f32, self.dy))));
-        self.y += self.dy * (3 - @floatToInt(i32, @fabs(@intToFloat(f32, self.dx * self.moving_x))));
+        if (phase == 0) {
+            self.cell_x += DX[@intCast(usize, out_edge_sz)];
+            self.cell_y += DY[@intCast(usize, out_edge_sz)];
 
-        if (self.y < 592 or self.y > 784) {
-            // Gone too high or low - reverse y direction
-            self.moving_x = rand_range(&self.prng, 0, 1);
-            self.dy = -self.dy;
+            self.in_edge = inverse_direction(self.out_edge);
+
+            if (self.cell_y == 18) // TODO: handle attract screen where the y limit is 0
+                self.disallow_direction = gc.Direction.UP;
+            if (self.cell_y == gc.NUM_GRID_ROWS - 1)
+                self.disallow_direction = gc.Direction.DOWN;
+        } else if (phase == 4) {
+            // TODO: fix this
+            //var key = ranker(self, game, 0);
+            //self.out_edge = std.min(zgu.range(4), key);
+
+            if (is_horizontal(self.out_edge))
+                self.previous_x_direction = out_edge_sz;
+
+            var new_cell_x = self.cell_x + DX[out_edge_sz];
+            var new_cell_y = self.cell_y + DY[out_edge_sz];
+
+            // if (new_cell_x >= 0 and new_cell_x < gc.num_grid_cols)
+            //     game.damage(new_cell_x, new_cell_y, 5);
+
+            _ = game.occupied.add(.{ .x = new_cell_x, .y = new_cell_y, .dir = null }) catch return;
+            _ = game.occupied.add(.{ .x = new_cell_x, .y = new_cell_y, .dir = inverse_direction(self.out_edge) }) catch return;
         }
 
-        self.anim_timer = (self.anim_timer + 1) % 4;
-        if (0 == self.anim_timer) {
-            self.anim_idx = (self.anim_idx + 1) % 4;
-        }
+        var turn_idx = @mod(to_i32(self.out_edge) - to_i32(self.in_edge), 4);
+
+        var offset_x = SECONDARY_AXIS_POSITIONS[phase] * (2 - turn_idx);
+        var stolen_y_movement: i32 = @mod(turn_idx, 2) * SECONDARY_AXIS_POSITIONS[phase];
+        var offset_y: i32 = -16 + (@intCast(i32, phase * 2)) - stolen_y_movement;
+
+        var rotation_matrix = ROTATION_MATRICES[@intCast(usize, to_i32(self.in_edge))];
+        offset_x = offset_x * rotation_matrix[0] + offset_y * rotation_matrix[1];
+        offset_y = offset_x * rotation_matrix[2] + offset_y * rotation_matrix[3];
+
+        var pos = gc.cell2posOff(self.cell_x, self.cell_y, offset_x, offset_y);
+        self.x = pos.x;
+        self.y = pos.y;
+
+        var direction = @mod(((SECONDARY_AXIS_SPEED[phase] * (turn_idx - 2)) + to_i32(self.in_edge) * 2 + 4), 8);
+        _ = direction;
+
+        var leg_frame = @divTrunc(phase, 4); // 16 phase cycle, 4 frames of animation
+        _ = leg_frame;
+
+        //self.image = "seg" + str(int(self.fast)) + str(int(self.health == 2)) + str(int(self.head)) + str(direction) + str(leg_frame)
     }
 
     pub fn draw(self: Self, zg: *ZigGame) void {
-        var frames = [_]usize{ 0, 2, 1, 2 };
-        var c = self.frames.items[frames[self.anim_idx] + self.e_type];
+        // var frames = [_]usize{ 0, 2, 1, 2 };
+        var c = self.frames.items[self.anim_idx];
         var w = c.width;
         var h = c.height;
         c.blit_at(zg.renderer, self.x - (w >> 1), self.y - (h >> 1));

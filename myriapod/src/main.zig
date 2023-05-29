@@ -2,12 +2,14 @@ const std = @import("std");
 const dbg = std.log.debug;
 const info = std.log.info;
 const zgame = @import("zgame"); // namespace
+const zgu = zgame.util;
 const ZigGame = zgame.ZigGame; // context
 const sdl = zgame.sdl;
 const zgzero = @import("zgzero/zgzero.zig");
 const SpriteFactory = @import("sprite.zig").Factory;
 const images = zgzero.images;
-const PressSpaceSprite = @import("sprites/press_space.zig").PressSpace;
+
+const gc = @import("game_common.zig");
 
 const SCREEN_WIDTH = 480;
 const SCREEN_HEIGHT = 800;
@@ -17,11 +19,6 @@ const NUM_GRID_COLS = 14;
 
 const PLYR_START_X = 240;
 const PLYR_START_Y = 768;
-const PRESS_START_Y = 420;
-
-fn range(len: usize) []const void {
-    return @as([*]void, undefined)[0..len];
-}
 
 const GameState = enum {
     MENU,
@@ -51,78 +48,32 @@ const InputEvents = struct {
     ie_key_down: InputEvent = .{},
 };
 
-const Game = struct {
-    const Self = Game;
-    bg_image: zgame.Canvas,
-    title_image: zgame.Canvas,
-    press_space: PressSpaceSprite,
-    //logo: zgame.Canvas,
-    time: zgzero.time.Ticker,
-
-    wave: i32 = -1,
-    press_space_anim: usize = 0,
-
-    fn init(zg: *ZigGame) !Game {
-        var bg_image = try zgame.Canvas.loadPng(zg.renderer, images.bg0);
-        var title_image = try zgame.Canvas.loadPng(zg.renderer, images.title);
-        var press_space = try PressSpaceSprite.init(zg, 0, PRESS_START_Y);
-        //var logo = try zgzero.canvases.zig_logo(zg.renderer);
-
-        return .{
-            .bg_image = bg_image,
-            .title_image = title_image,
-            .press_space = press_space,
-            .time = zgzero.time.Ticker.init(),
-        };
-    }
-
-    fn update(self: *Self, gctx: *GameContext) void {
-        _ = gctx;
-
-        if (self.time.counter_ms > 50) {
-            self.press_space.update();
-            self.time.reset();
-        }
-    }
-
-    fn draw_bg(self: Self, gctx: *GameContext) void {
-        self.bg_image.blit(gctx.zg.renderer);
-    }
-
-    fn draw_title(self: Self, gctx: *GameContext) void {
-        self.title_image.blit(gctx.zg.renderer);
-        //self.logo.blit_at(gctx.zg.renderer, 0, 100);
-    }
-
-    fn draw_press_space(self: Self, gctx: *GameContext) void {
-        self.press_space.draw(gctx.zg);
-    }
-};
-
 const GameContext = struct {
     const Self = GameContext;
     zg: *ZigGame,
     mixer: *zgzero.mixer.Mixer,
     font: *zgzero.font.Font,
-    game_level: u16 = 1,
+    wave: u16 = 0,
     lives: u64 = 0,
     player_score_edit_pos: usize = 0,
     game_state: GameState = GameState.GAME_OVER,
     bounds: sdl.Rectangle,
     factory: SpriteFactory,
-    playfield: zgame.sprite.Group(SpriteFactory.Type) = .{},
-    bullets: zgame.sprite.Group(SpriteFactory.Type) = .{},
+    playfield: zgame.sprite.Group(SpriteFactory.Type, gc.Game) = .{},
+    bullets: zgame.sprite.Group(SpriteFactory.Type, gc.Game) = .{},
+    segments: zgame.sprite.Group(SpriteFactory.Type, gc.Game) = .{},
 
     input: InputEvents = .{},
     stats_hash: usize = 0,
 
     time: i32 = 0,
     player: usize = 0,
+    enemy: usize = 0,
 
-    game: Game,
+    game: gc.Game,
 
     pub fn init(zg: *ZigGame, mixer: *zgzero.mixer.Mixer, font: *zgzero.font.Font) !Self {
-        var game = try Game.init(zg);
+        var game = try gc.Game.init(zg);
         var gctx: Self = .{
             .zg = zg,
             .mixer = mixer,
@@ -135,29 +86,35 @@ const GameContext = struct {
         var player_sprite = try SpriteFactory.player.new(gctx.factory, 0, 0);
         gctx.player = try gctx.playfield.add(player_sprite);
 
-        var enemy = try SpriteFactory.flying_enemy.new(gctx.factory, 100);
-        _ = try gctx.playfield.add(enemy);
+        var enemy_sprite = try SpriteFactory.flying_enemy.new(gctx.factory, 100);
+        gctx.enemy = try gctx.playfield.add(enemy_sprite);
 
         return gctx;
     }
 
-    fn add_segments(self: *Self) void {
+    pub fn handle_new_wave(self: *Self) !void {
+        if (self.segments.list.items.len == 0) {
+            try self.add_segments();
+        }
+    }
 
-        //        game.play_sound("wave");
-        //self.wave += 1;
+    fn add_segments(self: *Self) !void {
+        // game.play_sound("wave");
+        self.wave += 1;
         self.time = 0;
         //self.segments = [];
         var num_segments = 8 + self.wave; // 4 * 2   # On the first four waves there are 8 segments - then 10, and so on
-        for (range(num_segments)) |_, i| {
-            var cell_x = -1 - i;
-            var cell_y = 0;
+        for (zgu.range(num_segments)) |_, i| {
+            var cell_x: i32 = -1 - @intCast(i32, i);
+            var cell_y: i32 = 0;
             // Determines whether segments take one or two hits to kill, based on the wave number.
             // e.g. on wave 0 all segments take one hit; on wave 1 they alternate between one and two hits
-            var health = 1; //[[1,1],[1,2],[2,2],[1,1]][self.wave % 4][i % 2];
+            var health: i32 = 1; //[[1,1],[1,2],[2,2],[1,1]][self.wave % 4][i % 2];
             var fast = self.wave % 4 == 3; // Every fourth myriapod moves faster than usual
             var head = i == 0; // The first segment of each myriapod is the head
-            var segment = try SpriteFactory.segments.new(self.factory, cell_x, cell_y, health, fast, head);
-            self.segments.append(segment);
+            var segment = try SpriteFactory.segment.new(self.factory, cell_x, cell_y, health, fast, head);
+            _ = try self.segments.add(segment);
+            dbg("added segment: {}", .{i});
         }
     }
 };
@@ -198,18 +155,25 @@ const state_menu = struct {
             }
         }
 
-        gctx.game.update(gctx);
+        if (gctx.game.time.counter_ms > 50) {
+            gctx.game.press_space.update(&gctx.game);
+            gctx.game.time.reset();
+        }
     }
     fn draw(gctx: *GameContext) !void {
-        gctx.game.draw_bg(gctx);
-        gctx.game.draw_title(gctx);
-        gctx.game.draw_press_space(gctx);
+        gctx.game.bg_image.blit(gctx.zg.renderer);
+        gctx.game.title_image.blit(gctx.zg.renderer);
+        gctx.game.press_space.draw(gctx.zg);
     }
 };
 
 const state_play = struct {
     const state = state_play;
+
     fn update(gctx: *GameContext) !void {
+        var player_sprite = &gctx.playfield.list.items[gctx.player];
+        var player_data = player_sprite.get();
+
         if (!gctx.input.ie_key_down.is_empty) {
             var key = gctx.input.ie_key_down.val.event.key_down;
             var scancode = key.scancode;
@@ -217,31 +181,39 @@ const state_play = struct {
             var dx: i32 = @as(i32, @boolToInt(scancode == sdl.Scancode.right)) - @as(i32, @boolToInt(scancode == sdl.Scancode.left));
             var dy: i32 = @as(i32, @boolToInt(scancode == sdl.Scancode.down)) - @as(i32, @boolToInt(scancode == sdl.Scancode.up));
 
-            var player_sprite = &gctx.playfield.list.items[gctx.player];
-            var pd = player_sprite.get();
-            pd.x += dx;
-            pd.y += dy;
-            player_sprite.set(pd);
+            player_data.x += dx;
+            player_data.y += dy;
+            player_sprite.set(player_data);
 
             if (scancode == sdl.Scancode.space) {
                 gctx.mixer.sounds.laser0.play();
 
                 var factory = SpriteFactory.init(gctx.zg);
-                var bullet_sprite = try SpriteFactory.bullet.new(factory, pd.x, pd.y, -8);
+                var bullet_sprite = try SpriteFactory.bullet.new(factory, player_data.x, player_data.y, -8);
                 _ = try gctx.bullets.add(bullet_sprite);
             }
         }
 
+        var fe = &gctx.playfield.list.items[gctx.enemy].flying_enemy;
+
+        if (fe.health <= 0 or fe.x < -35 or fe.x > 515) {
+            fe.reset(player_data.x);
+        }
+
+        try gctx.handle_new_wave();
+
         //if (gctx.game.time.counter_ms > 50) {
-        gctx.bullets.update();
-        gctx.playfield.update();
+        gctx.bullets.update(&gctx.game);
+        gctx.playfield.update(&gctx.game);
+        gctx.segments.update(&gctx.game);
         gctx.game.time.reset();
         //}
     }
 
     fn draw(gctx: *GameContext) !void {
-        gctx.game.draw_bg(gctx);
+        gctx.game.bg_image.blit(gctx.zg.renderer);
         gctx.playfield.draw(gctx.zg);
+        gctx.segments.draw(gctx.zg);
         gctx.bullets.draw(gctx.zg);
     }
 };
