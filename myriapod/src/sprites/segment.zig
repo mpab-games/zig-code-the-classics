@@ -149,8 +149,8 @@ pub const Segment = struct {
         var out_edge_sz: usize = @enumToInt(self.out_edge);
 
         if (phase == 0) {
-            self.cell_x += DX[@intCast(usize, out_edge_sz)];
-            self.cell_y += DY[@intCast(usize, out_edge_sz)];
+            self.cell_x += DX[out_edge_sz];
+            self.cell_y += DY[out_edge_sz];
 
             self.in_edge = inverse_direction(self.out_edge);
 
@@ -190,7 +190,7 @@ pub const Segment = struct {
         self.x = pos.x;
         self.y = pos.y;
 
-        var direction = @mod(((SECONDARY_AXIS_SPEED[phase] * (turn_idx - 2)) + to_i32(self.in_edge) * 2 + 4), 8);
+        var direction = SECONDARY_AXIS_SPEED[phase] * (turn_idx - 2) + to_i32(self.in_edge) * 2 + 4 % 8;
         _ = direction;
 
         var leg_frame = @divTrunc(phase, 4); // 16 phase cycle, 4 frames of animation
