@@ -122,8 +122,6 @@ pub const Segment = struct {
 
     frames: zgame.Canvas.List,
     anim_idx: usize = 0,
-    anim_timer: usize = 0,
-    time: i32 = 0,
 
     pub fn init(zg: *ZigGame, cell_x: i32, cell_y: i32, health: i32, fast: bool, head: bool) !Segment {
         var frames = zgame.Canvas.List.init(std.heap.page_allocator);
@@ -131,8 +129,6 @@ pub const Segment = struct {
 
         var s: Segment = .{
             .frames = frames,
-            //.width = frames.items[0].width,
-            //.height = frames.items[0].height,
             .cell_x = cell_x,
             .cell_y = cell_y,
             .health = health,
@@ -149,8 +145,7 @@ pub const Segment = struct {
     }
 
     pub fn update(self: *Self, game: *gc.Game) void {
-        var phase: usize = @mod(@intCast(usize, self.time), 16);
-        //var phase_sz = @intCast(usize, self.time);
+        var phase: usize = game.time.count % 16;
         var out_edge_sz: usize = @enumToInt(self.out_edge);
 
         if (phase == 0) {

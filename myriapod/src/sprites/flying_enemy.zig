@@ -34,7 +34,6 @@ pub const FlyingEnemy = struct {
 
     frames: zgame.Canvas.List,
     anim_idx: usize = 0,
-    anim_timer: usize = 0,
     prng: Prng,
     e_type: usize = 0,
 
@@ -88,7 +87,6 @@ pub const FlyingEnemy = struct {
     }
 
     pub fn update(self: *Self, game: *gc.Game) void {
-        _ = game;
 
         // Move
         self.x += self.dx * self.moving_x * (3 - @floatToInt(i32, @fabs(@intToFloat(f32, self.dy))));
@@ -100,8 +98,7 @@ pub const FlyingEnemy = struct {
             self.dy = -self.dy;
         }
 
-        self.anim_timer = (self.anim_timer + 1) % 4;
-        if (0 == self.anim_timer) {
+        if (0 == game.time.count % 4) {
             self.anim_idx = (self.anim_idx + 1) % 4;
         }
     }

@@ -202,12 +202,9 @@ const state_play = struct {
 
         try gctx.handle_new_wave();
 
-        //if (gctx.game.time.counter_ms > 50) {
         gctx.bullets.update(&gctx.game);
         gctx.playfield.update(&gctx.game);
         gctx.segments.update(&gctx.game);
-        gctx.game.time.reset();
-        //}
     }
 
     fn draw(gctx: *GameContext) !void {
