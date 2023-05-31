@@ -3,7 +3,7 @@ const zgame = @import("zgame");
 pub const Ticker = struct {
     ticks: u64,
     counter_ms: u64,
-    count: usize,
+    count: u64,
 
     pub fn init() Ticker {
         return .{
@@ -15,8 +15,7 @@ pub const Ticker = struct {
 
     pub fn tick(self: *Ticker) void {
         var ticks_now = zgame.time.get_ticks();
-        var ticks_diff = ticks_now - self.ticks;
-        self.counter_ms = ticks_diff;
+        self.counter_ms = ticks_now - self.ticks;
         self.count += 1;
     }
 

@@ -1,4 +1,5 @@
 const std = @import("std");
+const dbg = std.log.debug;
 const zgame = @import("zgame"); // namespace
 const zgu = zgame.util; // namespace
 const ZigGame = zgame.ZigGame; // context
@@ -191,12 +192,18 @@ pub const Segment = struct {
         self.y = pos.y;
 
         var direction = SECONDARY_AXIS_SPEED[phase] * (turn_idx - 2) + to_i32(self.in_edge) * 2 + 4 % 8;
-        _ = direction;
 
         var leg_frame = @divTrunc(phase, 4); // 16 phase cycle, 4 frames of animation
-        _ = leg_frame;
 
-        //self.image = "seg" + str(int(self.fast)) + str(int(self.health == 2)) + str(int(self.head)) + str(direction) + str(leg_frame)
+        // TODO: use img_str as var name to get image
+        var img_str = std.fmt.allocPrint(
+            std.heap.page_allocator,
+            "seg{}{}{}{}{}",
+            .{ @boolToInt(self.fast), @boolToInt(self.health == 2), @boolToInt(self.head), direction, leg_frame },
+        ) catch return;
+        defer std.heap.page_allocator.free(img_str);
+
+        dbg("{s}", .{img_str});
     }
 
     pub fn draw(self: Self, zg: *ZigGame) void {
