@@ -67,6 +67,14 @@ const Occupied = struct {
 
 pub const Game = struct {
     const Self = Game;
+
+    pub const State = enum {
+        MENU,
+        PLAY,
+        GAME_OVER,
+    };
+    state: State = State.GAME_OVER,
+
     bg_image: zgame.Canvas,
     title_image: zgame.Canvas,
     press_space: PressSpaceSprite,
@@ -90,5 +98,9 @@ pub const Game = struct {
             .time = zgzero.time.Ticker.init(),
             .occupied = .{},
         };
+    }
+
+    pub fn set_game_state(self: *Self, state: State) void {
+        self.state = state;
     }
 };

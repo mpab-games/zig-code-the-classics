@@ -20,12 +20,6 @@ const NUM_GRID_COLS = 14;
 const PLYR_START_X = 240;
 const PLYR_START_Y = 768;
 
-const GameState = enum {
-    MENU,
-    PLAY,
-    GAME_OVER,
-};
-
 const InputEvent = struct {
     const Event = union {
         event: sdl.Event,
@@ -56,7 +50,7 @@ const GameContext = struct {
     wave: u16 = 0,
     lives: u64 = 0,
     player_score_edit_pos: usize = 0,
-    game_state: GameState = GameState.GAME_OVER,
+
     bounds: sdl.Rectangle,
     factory: SpriteFactory,
     playfield: zgame.sprite.Group(SpriteFactory.Type, gc.Game) = .{},
@@ -133,10 +127,6 @@ fn process_mouse_motion(gctx: *GameContext) void {
     bat.set(data);
 }
 
-fn set_game_state(gctx: *GameContext, state: GameState) void {
-    gctx.game_state = state;
-}
-
 // state handlers
 const state_menu = struct {
     const state = state_menu;
@@ -145,7 +135,7 @@ const state_menu = struct {
             var key = gctx.input.ie_key_down.val.event.key_down;
             var scancode = key.scancode;
             if (scancode == sdl.Scancode.space) {
-                set_game_state(gctx, GameState.PLAY);
+                gctx.game.set_game_state(gc.Game.State.PLAY);
                 gctx.mixer.sounds.wave0.play();
                 var player_sprite = &gctx.playfield.list.items[gctx.player];
                 var pd = player_sprite.get();
@@ -245,7 +235,7 @@ fn run_game(gctx: *GameContext) !bool {
         }
     }
 
-    switch (gctx.game_state) {
+    switch (gctx.game.state) {
         .MENU => {
             try state_menu.update(gctx);
             try state_menu.draw(gctx);
@@ -269,7 +259,7 @@ pub fn main() !void {
     var mixer = try zgzero.mixer.Mixer.init();
     var font = try zgzero.font.Font.init(&zgContext);
     var gctx = try GameContext.init(&zgContext, &mixer, &font);
-    set_game_state(&gctx, GameState.MENU);
+    gctx.game.set_game_state(gc.Game.State.MENU);
 
     mixer.music.play("theme");
     mixer.music.set_volume(0.4);

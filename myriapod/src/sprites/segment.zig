@@ -8,6 +8,15 @@ const zgzero = @import("../zgzero/zgzero.zig");
 const canvases = zgzero.canvases;
 const gc = @import("../game_common.zig");
 
+fn to_sz(dir: gc.Direction) usize {
+    switch (dir) {
+        .UP => return 0,
+        .RIGHT => return 1,
+        .DOWN => return 2,
+        .LEFT => return 3,
+    }
+}
+
 fn to_i32(dir: gc.Direction) i32 {
     switch (dir) {
         .UP => return 0,
@@ -100,10 +109,6 @@ fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Rankin
     };
 }
 
-// fn rank(seg: *Segment) rank_fn {
-//     return ranker(seg);
-// }
-
 pub const Segment = struct {
     const Self = Segment;
     x: i32 = 0,
@@ -177,37 +182,44 @@ pub const Segment = struct {
             _ = game.occupied.add(.{ .x = new_cell_x, .y = new_cell_y, .dir = inverse_direction(self.out_edge) }) catch return;
         }
 
-        var turn_idx = @mod(to_i32(self.out_edge) - to_i32(self.in_edge), 4);
+        var turn_idx: i32 = @mod(to_i32(self.out_edge) - to_i32(self.in_edge), 4);
+        var turn_i32: i32 = @intCast(i32, turn_idx);
 
-        var offset_x = SECONDARY_AXIS_POSITIONS[phase] * (2 - turn_idx);
-        var stolen_y_movement: i32 = @mod(turn_idx, 2) * SECONDARY_AXIS_POSITIONS[phase];
+        var offset_x: i32 = SECONDARY_AXIS_POSITIONS[phase] * (2 - turn_i32);
+        var stolen_y_movement: i32 = SECONDARY_AXIS_POSITIONS[phase] * @mod(turn_i32, 2);
         var offset_y: i32 = -16 + (@intCast(i32, phase * 2)) - stolen_y_movement;
 
-        var rotation_matrix = ROTATION_MATRICES[@intCast(usize, to_i32(self.in_edge))];
+        var rotation_matrix = ROTATION_MATRICES[to_sz(self.in_edge)];
         offset_x = offset_x * rotation_matrix[0] + offset_y * rotation_matrix[1];
         offset_y = offset_x * rotation_matrix[2] + offset_y * rotation_matrix[3];
+
+        // TODO: fix offset_y
+        offset_y = 0;
 
         var pos = gc.cell2posOff(self.cell_x, self.cell_y, offset_x, offset_y);
         self.x = pos.x;
         self.y = pos.y;
 
-        var direction = SECONDARY_AXIS_SPEED[phase] * (turn_idx - 2) + to_i32(self.in_edge) * 2 + 4 % 8;
+        var direction: i32 = @mod(SECONDARY_AXIS_SPEED[phase] * (turn_idx - 2) + to_i32(self.in_edge) * 2 + 4, 8);
+        var leg_frame: usize = @divTrunc(phase, 4); // 16 phase cycle, 4 frames of animation
 
-        var leg_frame = @divTrunc(phase, 4); // 16 phase cycle, 4 frames of animation
+        var x128: usize = @boolToInt(self.fast);
+        var x64: usize = @boolToInt(self.health == 2);
+        var x32: usize = @boolToInt(self.head);
 
-        // TODO: use img_str as var name to get image
-        var img_str = std.fmt.allocPrint(
-            std.heap.page_allocator,
-            "seg{}{}{}{}{}",
-            .{ @boolToInt(self.fast), @boolToInt(self.health == 2), @boolToInt(self.head), direction, leg_frame },
-        ) catch return;
-        defer std.heap.page_allocator.free(img_str);
+        self.anim_idx = x128 * 128 + x64 * 64 + x32 * 32 + @intCast(usize, direction) * 4 + leg_frame;
 
-        dbg("{s}", .{img_str});
+        // var img_str = std.fmt.allocPrint(
+        //     std.heap.page_allocator,
+        //     "seg{}{}{}{}{}",
+        //     .{ x128, x64, x32, direction, leg_frame },
+        // ) catch return;
+        // defer std.heap.page_allocator.free(img_str);
+
+        // dbg("{s}", .{img_str});
     }
 
     pub fn draw(self: Self, zg: *ZigGame) void {
-        // var frames = [_]usize{ 0, 2, 1, 2 };
         var c = self.frames.items[self.anim_idx];
         var w = c.width;
         var h = c.height;
