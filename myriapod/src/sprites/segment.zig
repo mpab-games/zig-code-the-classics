@@ -131,7 +131,7 @@ pub const Segment = struct {
 
     pub fn init(zg: *ZigGame, cell_x: i32, cell_y: i32, health: i32, fast: bool, head: bool) !Segment {
         var frames = zgame.Canvas.List.init(std.heap.page_allocator);
-        try canvases.segment_list(&frames, zg.renderer);
+        try canvases.seg_list(&frames, zg.renderer);
 
         var s: Segment = .{
             .frames = frames,

@@ -1,0 +1,62 @@
+#!/usr/bin/env sh
+
+export GENFILE="./src/zgzero/canvases.zig"
+
+HEADER='const zgame = @import("zgame"); // namespace
+const Canvas = zgame.Canvas;
+const images = @import("__gen/images.zig");
+
+pub fn zig_logo(renderer: zgame.sdl.Renderer) !zgame.Canvas {
+    const logo = @embedFile("./images/zig-logo.png");
+    return try zgame.Canvas.loadPng(renderer, logo);
+}
+
+pub fn space_list(list: *zgame.Canvas.List, renderer: zgame.sdl.Renderer) !void {
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space0));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space1));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space2));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space3));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space4));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space5));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space6));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space7));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space8));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space9));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space10));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space11));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space12));
+    try list.append(try zgame.Canvas.loadPng(renderer, images.space13));
+}
+'
+echo "$HEADER" > $GENFILE
+
+generate_list() {
+    FILES="./src/zgzero/__gen/images/$LIST_NAME*"
+    FN_NAME="$LIST_NAME"_list
+
+    echo "pub fn $FN_NAME(list: *zgame.Canvas.List, renderer: zgame.sdl.Renderer) !void {" >>$GENFILE
+
+    for FILE in $FILES; do
+        VAR_NAME=$(echo "${FILE##*/}" | cut -f 1 -d '.')
+        echo "    try list.append(try zgame.Canvas.loadPng(renderer, images.$VAR_NAME));" >>$GENFILE
+    done
+
+    echo "}" >>$GENFILE
+}
+
+
+# space
+# seg
+# meanie
+
+# file numbering is not consistent, so c/p for now
+# export LIST_NAME=space
+# generate_list
+# echo "" >>$GENFILE
+
+export LIST_NAME=meanie
+generate_list
+echo "" >>$GENFILE
+
+export LIST_NAME=seg
+generate_list
