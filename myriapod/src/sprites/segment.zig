@@ -55,33 +55,34 @@ const ROTATION_MATRICES = [4][4]i32{
 const rank_fn = fn (*Segment, i32) i32;
 
 const Ranking = packed struct {
-    out: u1,
-    turning_back_on_self: u1,
-    direction_disallowed: u1,
-    occupied_by_segment: u1,
-    rock_present: u1,
-    horizontal_blocked: u1,
     same_as_previous_x_direction: u1,
+    horizontal_blocked: u1,
+    rock_present: u1,
+    occupied_by_segment: u1,
+    direction_disallowed: u1,
+    turning_back_on_self: u1,
+    out: u1,
 };
 
-fn rank_min(dirs: [4]gc.Direction, ranks: [4]Ranking) gc.Direction {
-    _ = ranks;
-    return dirs[1];
-    // var _0 = @bitCast(u7, ranks[0]);
-    // var _1 = @bitCast(u7, ranks[1]);
-    // var _2 = @bitCast(u7, ranks[2]);
-    // var _3 = @bitCast(u7, ranks[3]);
-    // dbg("rank_min: {}-{}-{}-{}", .{ _0, _1, _2, _3 });
-    // if (_0 <= _1 and _0 <= _2 and _0 <= _3)
-    //     return dirs[0];
-    // if (_1 <= _0 and _1 <= _2 and _1 <= _3)
-    //     return dirs[1];
-    // if (_2 <= _1 and _2 <= _0 and _2 <= _3)
-    //     return dirs[2];
-    // if (_3 <= _1 and _3 <= _2 and _3 <= _0)
-    //     return dirs[3];
+fn rank_dirs(dirs: [4]gc.Direction, ranks: [4]Ranking) gc.Direction {
+    var _0 = @bitCast(u7, ranks[0]);
+    var _1 = @bitCast(u7, ranks[1]);
+    var _2 = @bitCast(u7, ranks[2]);
+    var _3 = @bitCast(u7, ranks[3]);
+    var idx: usize = 1;
 
-    // return dirs[0];
+    if (_0 <= _1 and _0 <= _2 and _0 <= _3)
+        idx = 0;
+    // if (_1 <= _0 and _1 <= _2 and _1 <= _3)
+    //     idx = 1;
+    if (_2 <= _1 and _2 <= _0 and _2 <= _3)
+        idx = 2;
+    if (_3 <= _1 and _3 <= _2 and _3 <= _0)
+        idx = 3;
+
+    //dbg("rank_dirs: {}-{}-{}-{}=>{}", .{ _0, _1, _2, _3, idx });
+
+    return dirs[idx];
 }
 
 fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Ranking {
@@ -180,6 +181,11 @@ pub const Segment = struct {
 
             self.in_edge = inverse_direction(self.out_edge);
 
+            var ylimit: i32 = if (game.state == gc.Game.State.MENU) 0 else 18;
+
+            if (self.cell_y == ylimit)
+                self.disallow_direction = gc.Direction.UP;
+
             if (self.cell_y == 18) // TODO: handle attract screen where the y limit is 0
                 self.disallow_direction = gc.Direction.UP;
             if (self.cell_y == gc.NUM_GRID_ROWS - 1)
@@ -195,7 +201,7 @@ pub const Segment = struct {
                 ranker(self, game, gc.Direction.LEFT),
             };
 
-            self.out_edge = rank_min(dirs, ranks);
+            self.out_edge = rank_dirs(dirs, ranks);
             out_edge_sz = @enumToInt(self.out_edge);
 
             if (is_horizontal(self.out_edge))
