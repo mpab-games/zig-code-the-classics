@@ -3,7 +3,7 @@
 echo "grabbing assets - please wait..."
 
 mkdir -p ./deps
-cd ./deps
+cd ./deps || exit
 [ ! -d "Code-the-Classics" ] && git clone https://github.com/Wireframe-Magazine/Code-the-Classics.git
 cd ..
 rm -rf ./src/zgzero/__gen
@@ -18,7 +18,7 @@ cp -R ./deps/Code-the-Classics/myriapod-master/sounds ./src/zgzero/__gen/.
 echo "generating sound assets code..."
 
 GENFILE="./src/zgzero/__gen/sounds.zig"
-FILES=./src/zgzero/__gen/sounds/*
+FILES="./src/zgzero/__gen/sounds/*"
 
 S1="// generated code
 const zgame = @import("'"'zgame'"'"); // namespace
@@ -57,7 +57,7 @@ echo "$S4" >>$GENFILE
 echo "generating image assets code..."
 
 GENFILE="./src/zgzero/__gen/images.zig"
-FILES=./src/zgzero/__gen/images/*
+FILES="./src/zgzero/__gen/images/*"
 
 for FILE in $FILES; do
     VAR_NAME=$(echo "${FILE##*/}" | cut -f 1 -d '.')
