@@ -25,7 +25,7 @@ pub fn cell2pos(cell_x: i32, cell_y: i32) zgame.Point {
     return cell2posOff(cell_x, cell_y, 0, 0);
 }
 
-const grid = [NUM_GRID_ROWS][NUM_GRID_COLS]i32{};
+//pub const grid = [NUM_GRID_ROWS][NUM_GRID_COLS]i32{};
 
 pub const Direction = enum {
     UP, // 0
@@ -34,9 +34,9 @@ pub const Direction = enum {
     LEFT, // 3
 };
 
-const Occupied = struct {
+pub const Occupied = struct {
     const Self = Occupied;
-    const Item = struct {
+    pub const Item = struct {
         x: i32,
         y: i32,
         dir: ?Direction,
@@ -78,9 +78,9 @@ pub const Game = struct {
     bg_image: zgame.Canvas,
     title_image: zgame.Canvas,
     press_space: PressSpaceSprite,
-    //logo: zgame.Canvas,
     time: zgzero.time.Ticker,
     occupied: Occupied,
+    grid: [NUM_GRID_ROWS][NUM_GRID_COLS]i32,
 
     wave: i32 = -1,
     press_space_anim: usize = 0,
@@ -97,6 +97,7 @@ pub const Game = struct {
             .press_space = press_space,
             .time = zgzero.time.Ticker.init(),
             .occupied = .{},
+            .grid = .{},
         };
     }
 

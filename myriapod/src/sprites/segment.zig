@@ -54,21 +54,41 @@ const ROTATION_MATRICES = [4][4]i32{
 
 const rank_fn = fn (*Segment, i32) i32;
 
-const Ranking = struct {
-    out: bool,
-    turning_back_on_self: bool,
-    direction_disallowed: bool,
-    occupied_by_segmen: bool,
-    rock_present: bool,
-    horizontal_blocked: bool,
-    same_as_previous_x_direction: bool,
+const Ranking = packed struct {
+    out: u1,
+    turning_back_on_self: u1,
+    direction_disallowed: u1,
+    occupied_by_segment: u1,
+    rock_present: u1,
+    horizontal_blocked: u1,
+    same_as_previous_x_direction: u1,
 };
 
-fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Ranking {
-    var new_cell_x = seg.cell_x + DX[proposed_out_edge];
-    var new_cell_y = seg.cell_y + DY[proposed_out_edge];
+fn rank_min(dirs: [4]gc.Direction, ranks: [4]Ranking) gc.Direction {
+    _ = ranks;
+    return dirs[1];
+    // var _0 = @bitCast(u7, ranks[0]);
+    // var _1 = @bitCast(u7, ranks[1]);
+    // var _2 = @bitCast(u7, ranks[2]);
+    // var _3 = @bitCast(u7, ranks[3]);
+    // dbg("rank_min: {}-{}-{}-{}", .{ _0, _1, _2, _3 });
+    // if (_0 <= _1 and _0 <= _2 and _0 <= _3)
+    //     return dirs[0];
+    // if (_1 <= _0 and _1 <= _2 and _1 <= _3)
+    //     return dirs[1];
+    // if (_2 <= _1 and _2 <= _0 and _2 <= _3)
+    //     return dirs[2];
+    // if (_3 <= _1 and _3 <= _2 and _3 <= _0)
+    //     return dirs[3];
 
-    var out = new_cell_x < 0 or new_cell_x > (gc.num_grid_cols - 1) or (new_cell_y < 0) or new_cell_y > (gc.num_grid_rows - 1);
+    // return dirs[0];
+}
+
+fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Ranking {
+    var new_cell_x = seg.cell_x + DX[to_sz(proposed_out_edge)];
+    var new_cell_y = seg.cell_y + DY[to_sz(proposed_out_edge)];
+
+    var out = new_cell_x < 0 or new_cell_x > (gc.NUM_GRID_COLS - 1) or (new_cell_y < 0) or new_cell_y > (gc.NUM_GRID_ROWS - 1);
 
     var turning_back_on_self = proposed_out_edge == seg.in_edge;
 
@@ -79,11 +99,11 @@ fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Rankin
     if (out or (new_cell_y == 0 and new_cell_x < 0)) {
         rock = 0;
     } else {
-        rock = gc.grid[new_cell_y][new_cell_x];
+        rock = game.grid[@intCast(usize, new_cell_y)][@intCast(usize, new_cell_x)];
     }
 
     var rock_present: bool = rock != 0;
-    var o1: gc.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y };
+    var o1: gc.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y, .dir = null };
     var o2: gc.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y, .dir = proposed_out_edge };
 
     var occupied_by_segment = game.occupied.in(&o1) or game.occupied.in(&o2);
@@ -99,13 +119,13 @@ fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Rankin
     var same_as_previous_x_direction = proposed_out_edge == seg.previous_x_direction;
 
     return .{
-        .out = out,
-        .turning_back_on_self = turning_back_on_self,
-        .direction_disallowed = direction_disallowed,
-        .occupied_by_segment = occupied_by_segment,
-        .rock_present = rock_present,
-        .horizontal_blocked = horizontal_blocked,
-        .same_as_previous_x_direction = same_as_previous_x_direction,
+        .out = @boolToInt(out),
+        .turning_back_on_self = @boolToInt(turning_back_on_self),
+        .direction_disallowed = @boolToInt(direction_disallowed),
+        .occupied_by_segment = @boolToInt(occupied_by_segment),
+        .rock_present = @boolToInt(rock_present),
+        .horizontal_blocked = @boolToInt(horizontal_blocked),
+        .same_as_previous_x_direction = @boolToInt(same_as_previous_x_direction),
     };
 }
 
@@ -124,7 +144,7 @@ pub const Segment = struct {
     out_edge: gc.Direction = gc.Direction.RIGHT,
 
     disallow_direction: gc.Direction = gc.Direction.UP, // Prevents segment from moving in a particular direction
-    previous_x_direction: usize = 1, // Used to create winding/snaking motion
+    previous_x_direction: gc.Direction = gc.Direction.RIGHT, // Used to create winding/snaking motion
 
     frames: zgame.Canvas.List,
     anim_idx: usize = 0,
@@ -166,11 +186,20 @@ pub const Segment = struct {
                 self.disallow_direction = gc.Direction.DOWN;
         } else if (phase == 4) {
             // TODO: fix this
-            //var key = ranker(self, game, 0);
-            //self.out_edge = std.min(zgu.range(4), key);
+            var dirs = [_]gc.Direction{ gc.Direction.UP, gc.Direction.RIGHT, gc.Direction.DOWN, gc.Direction.LEFT };
+
+            var ranks = [_]Ranking{
+                ranker(self, game, gc.Direction.UP),
+                ranker(self, game, gc.Direction.RIGHT),
+                ranker(self, game, gc.Direction.DOWN),
+                ranker(self, game, gc.Direction.LEFT),
+            };
+
+            self.out_edge = rank_min(dirs, ranks);
+            out_edge_sz = @enumToInt(self.out_edge);
 
             if (is_horizontal(self.out_edge))
-                self.previous_x_direction = out_edge_sz;
+                self.previous_x_direction = self.out_edge;
 
             var new_cell_x = self.cell_x + DX[out_edge_sz];
             var new_cell_y = self.cell_y + DY[out_edge_sz];
@@ -207,6 +236,8 @@ pub const Segment = struct {
         var x64: usize = @boolToInt(self.health == 2);
         var x32: usize = @boolToInt(self.head);
 
+        // equivalent to:
+        // self.image = "seg" + str(int(self.fast)) + str(int(self.health == 2)) + str(int(self.head)) + str(direction) + str(leg_frame)
         self.anim_idx = x128 * 128 + x64 * 64 + x32 * 32 + @intCast(usize, direction) * 4 + leg_frame;
 
         // var img_str = std.fmt.allocPrint(
