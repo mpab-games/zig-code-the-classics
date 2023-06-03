@@ -48,6 +48,9 @@ generate_list() {
 # space
 # seg
 # meanie
+# digit
+# rock
+# explosion
 
 # file numbering is not consistent, so c/p for now
 # export LIST_NAME=space
@@ -59,4 +62,13 @@ generate_list
 echo "" >>$GENFILE
 
 export LIST_NAME=seg
+generate_list
+
+export LIST_NAME=digit
+generate_list
+
+export LIST_NAME=rock
+generate_list
+
+export LIST_NAME=exp
 generate_list
