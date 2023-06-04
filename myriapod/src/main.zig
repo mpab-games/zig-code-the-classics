@@ -101,7 +101,7 @@ const GameContext = struct {
             var head = i == 0; // The first segment of each myriapod is the head
             var segment = try SpriteFactory.segment.new(self.factory, cell_x, cell_y, health, fast, head);
             _ = try self.segments.add(segment);
-            dbg("added segment: {}", .{i});
+            //dbg("added segment: {}", .{i});
         }
     }
 };
@@ -138,13 +138,30 @@ const state_menu = struct {
             }
         }
 
-        if (gctx.game.time.counter_ms > 50) {
+        if (gctx.game.time.count % 4 == 0) {
             gctx.game.press_space.update(&gctx.game);
-            gctx.game.time.reset();
+            //gctx.game.time.reset();
         }
+
+        var fe = &gctx.playfield.list.items[gctx.enemy].flying_enemy;
+
+        if (fe.health <= 0 or fe.x < -35 or fe.x > 515) {
+            fe.reset(GAME.PLYR_START_X);
+        }
+
+        try gctx.handle_new_wave();
+
+        gctx.playfield.update(&gctx.game);
+        gctx.segments.update(&gctx.game);
     }
+
     fn draw(gctx: *GameContext) !void {
         gctx.game.bg_image.blit(gctx.zg.renderer);
+
+        gctx.game.bg_image.blit(gctx.zg.renderer);
+        gctx.playfield.draw(gctx.zg);
+        gctx.segments.draw(gctx.zg);
+
         gctx.game.title_image.blit(gctx.zg.renderer);
         gctx.game.press_space.draw(gctx.zg);
     }

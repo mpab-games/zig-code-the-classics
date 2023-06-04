@@ -154,7 +154,7 @@ pub const Game = struct {
         var score_str = std.fmt.allocPrint(
             std.heap.page_allocator,
             "{}",
-            .{1234567890},
+            .{self.player_score},
         ) catch return;
         defer std.heap.page_allocator.free(score_str);
 
