@@ -1,14 +1,25 @@
 const std = @import("std");
 const zgame = @import("zgame");
 const zgu = zgame.util;
+const range = zgu.range;
 const ZigGame = zgame.ZigGame; // context
 const zgzero = @import("zgzero/zgzero.zig");
 const images = zgzero.images;
+const canvases = zgzero.canvases;
 const PressSpaceSprite = @import("sprites/press_space.zig").PressSpace;
+
+// all magic numbers belong in here
 
 pub const NUM_GRID_ROWS = 25;
 pub const NUM_GRID_COLS = 14;
 const PRESS_START_Y = 420;
+
+pub const SCREEN_WIDTH = 480;
+pub const SCREEN_HEIGHT = 800;
+pub const SCREEN_TITLE = "Myriapod";
+
+pub const PLYR_START_X = 240;
+pub const PLYR_START_Y = 768;
 
 pub fn pos2cell(x: i32, y: i32) zgame.Point {
     return .{ .x = (x - 16) / 32, .y = y / 32 };
@@ -65,17 +76,44 @@ pub const Occupied = struct {
     }
 };
 
+const DigitsImages = struct {
+    const Self = DigitsImages;
+    zg: *ZigGame,
+    list: zgame.Canvas.List,
+
+    pub fn init(
+        zg: *ZigGame,
+    ) !DigitsImages {
+        var list = zgame.Canvas.List.init(std.heap.page_allocator);
+        try canvases.digit_list(&list, zg.renderer);
+
+        var s: DigitsImages = .{
+            .zg = zg,
+            .list = list,
+        };
+
+        return s;
+    }
+
+    pub fn draw(self: Self, char: usize, x: i32, y: i32) void {
+        self.list.items[char].blit_at(self.zg.renderer, x, y);
+    }
+};
+
+pub const State = enum {
+    MENU,
+    PLAY,
+    GAME_OVER,
+};
+
+// all 'game' functions - but no logic
 pub const Game = struct {
     const Self = Game;
-
-    pub const State = enum {
-        MENU,
-        PLAY,
-        GAME_OVER,
-    };
     state: State = State.GAME_OVER,
 
     bg_image: zgame.Canvas,
+    digits_images: DigitsImages,
+
     title_image: zgame.Canvas,
     press_space: PressSpaceSprite,
     time: zgzero.time.Ticker,
@@ -85,23 +123,50 @@ pub const Game = struct {
     wave: i32 = -1,
     press_space_anim: usize = 0,
 
+    player_lives: i32 = 3,
+    player_score: i32 = 0,
+    player_life_image: zgame.Canvas,
+
+    zg: *ZigGame,
+
     pub fn init(zg: *ZigGame) !Game {
         var bg_image = try zgame.Canvas.loadPng(zg.renderer, images.bg0);
+        var digits_images = try DigitsImages.init(zg);
+        var player_life_image = try zgame.Canvas.loadPng(zg.renderer, images.life);
         var title_image = try zgame.Canvas.loadPng(zg.renderer, images.title);
         var press_space = try PressSpaceSprite.init(zg, 0, PRESS_START_Y);
         //var logo = try zgzero.canvases.zig_logo(zg.renderer);
 
         return .{
             .bg_image = bg_image,
+            .digits_images = digits_images,
+            .player_life_image = player_life_image,
             .title_image = title_image,
             .press_space = press_space,
             .time = zgzero.time.Ticker.init(),
             .occupied = .{},
             .grid = .{},
+            .zg = zg,
         };
     }
 
-    pub fn set_game_state(self: *Self, state: State) void {
-        self.state = state;
+    pub fn draw_score(self: *Self) void {
+        var score_str = std.fmt.allocPrint(
+            std.heap.page_allocator,
+            "{}",
+            .{1234567890},
+        ) catch return;
+        defer std.heap.page_allocator.free(score_str);
+
+        for (range(score_str.len)) |_, i| {
+            var digit = score_str[score_str.len - i - 1] - '0';
+            self.digits_images.draw(digit, @intCast(i32, 468 - i * 24) - 24, 5);
+        }
+    }
+
+    pub fn draw_lives(self: *Self) void {
+        for (range(@intCast(usize, self.player_lives))) |_, i| {
+            self.player_life_image.blit_at(self.zg.renderer, @intCast(i32, i * 40 + 8), 4);
+        }
     }
 };

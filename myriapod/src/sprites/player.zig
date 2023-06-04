@@ -5,7 +5,7 @@ const sdl = @import("zgame").sdl;
 const zgzero = @import("../zgzero/zgzero.zig");
 const canvases = zgzero.canvases;
 const Prng = std.rand.DefaultPrng;
-const gc = @import("../game_common.zig");
+const GAME = @import("../game.zig");
 
 pub const Player = struct {
     const Self = Player;
@@ -20,7 +20,7 @@ pub const Player = struct {
         self.canvas.texture.destroy();
     }
 
-    pub fn update(self: *Self, game: *gc.Game) void {
+    pub fn update(self: *Self, game: *GAME.Game) void {
         _ = self;
         _ = game;
     }

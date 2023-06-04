@@ -3,22 +3,15 @@ const dbg = std.log.debug;
 const info = std.log.info;
 const zgame = @import("zgame"); // namespace
 const zgu = zgame.util;
+const range = zgu.range;
 const ZigGame = zgame.ZigGame; // context
 const sdl = zgame.sdl;
 const zgzero = @import("zgzero/zgzero.zig");
+
 const SpriteFactory = @import("sprite.zig").Factory;
 const images = zgzero.images;
 
-const gc = @import("game_common.zig");
-
-const SCREEN_WIDTH = 480;
-const SCREEN_HEIGHT = 800;
-const SCREEN_TITLE = "Myriapod";
-const NUM_GRID_ROWS = 25;
-const NUM_GRID_COLS = 14;
-
-const PLYR_START_X = 240;
-const PLYR_START_Y = 768;
+const GAME = @import("game.zig");
 
 const InputEvent = struct {
     const Event = union {
@@ -53,9 +46,9 @@ const GameContext = struct {
 
     bounds: sdl.Rectangle,
     factory: SpriteFactory,
-    playfield: zgame.sprite.Group(SpriteFactory.Type, gc.Game) = .{},
-    bullets: zgame.sprite.Group(SpriteFactory.Type, gc.Game) = .{},
-    segments: zgame.sprite.Group(SpriteFactory.Type, gc.Game) = .{},
+    playfield: zgame.sprite.Group(SpriteFactory.Type, GAME.Game) = .{},
+    bullets: zgame.sprite.Group(SpriteFactory.Type, GAME.Game) = .{},
+    segments: zgame.sprite.Group(SpriteFactory.Type, GAME.Game) = .{},
 
     input: InputEvents = .{},
     stats_hash: usize = 0,
@@ -64,10 +57,10 @@ const GameContext = struct {
     player: usize = 0,
     enemy: usize = 0,
 
-    game: gc.Game,
+    game: GAME.Game,
 
     pub fn init(zg: *ZigGame, mixer: *zgzero.mixer.Mixer, font: *zgzero.font.Font) !Self {
-        var game = try gc.Game.init(zg);
+        var game = try GAME.Game.init(zg);
         var gctx: Self = .{
             .zg = zg,
             .mixer = mixer,
@@ -88,18 +81,18 @@ const GameContext = struct {
 
     pub fn handle_new_wave(self: *Self) !void {
         if (self.segments.list.items.len == 0) {
+            // game.play_sound("wave");
+            self.wave += 1;
+            self.time = 0;
             try self.add_segments();
         }
     }
 
     fn add_segments(self: *Self) !void {
-        // game.play_sound("wave");
-        self.wave += 1;
-        self.time = 0;
-        //self.segments = [];
-        var num_segments = 8 + self.wave; // 4 * 2   # On the first four waves there are 8 segments - then 10, and so on
-        for (zgu.range(num_segments)) |_, i| {
-            var cell_x: i32 = -1 - @intCast(i32, i);
+        var num_segments = 8 + ((self.wave >> 2) << 1); // On the first four waves there are 8 segments - then 10, and so on
+        for (range(num_segments)) |_, i| {
+            var cell_x: i32 = 8 - @intCast(i32, i);
+            //var cell_x: i32 = -1 - @intCast(i32, i);
             var cell_y: i32 = 0;
             // Determines whether segments take one or two hits to kill, based on the wave number.
             // e.g. on wave 0 all segments take one hit; on wave 1 they alternate between one and two hits
@@ -135,12 +128,12 @@ const state_menu = struct {
             var key = gctx.input.ie_key_down.val.event.key_down;
             var scancode = key.scancode;
             if (scancode == sdl.Scancode.space) {
-                gctx.game.set_game_state(gc.Game.State.PLAY);
+                set_game_state(&gctx.game, GAME.State.PLAY);
                 gctx.mixer.sounds.wave0.play();
                 var player_sprite = &gctx.playfield.list.items[gctx.player];
                 var pd = player_sprite.get();
-                pd.x = PLYR_START_X;
-                pd.y = PLYR_START_Y;
+                pd.x = GAME.PLYR_START_X;
+                pd.y = GAME.PLYR_START_Y;
                 player_sprite.set(pd);
             }
         }
@@ -202,6 +195,8 @@ const state_play = struct {
         gctx.playfield.draw(gctx.zg);
         gctx.segments.draw(gctx.zg);
         gctx.bullets.draw(gctx.zg);
+        gctx.game.draw_lives();
+        gctx.game.draw_score();
     }
 };
 
@@ -254,12 +249,17 @@ fn run_game(gctx: *GameContext) !bool {
     return true;
 }
 
+// add any game state transition logic here
+pub fn set_game_state(game: *GAME.Game, state: GAME.State) void {
+    game.state = state;
+}
+
 pub fn main() !void {
-    var zgContext = try ZigGame.init(SCREEN_TITLE, SCREEN_WIDTH, SCREEN_HEIGHT);
+    var zgContext = try ZigGame.init(GAME.SCREEN_TITLE, GAME.SCREEN_WIDTH, GAME.SCREEN_HEIGHT);
     var mixer = try zgzero.mixer.Mixer.init();
     var font = try zgzero.font.Font.init(&zgContext);
     var gctx = try GameContext.init(&zgContext, &mixer, &font);
-    gctx.game.set_game_state(gc.Game.State.MENU);
+    set_game_state(&gctx.game, GAME.State.MENU);
 
     mixer.music.play("theme");
     mixer.music.set_volume(0.4);

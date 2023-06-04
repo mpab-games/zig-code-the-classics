@@ -7,8 +7,6 @@ pub fn range(len: usize) []const void {
     return @as([*]void, undefined)[0..len];
 }
 
-//ex: for (range(sg.len), 0..) |_, i| {
-
 pub const cast = struct {
     i8: i8,
     u8: u8,

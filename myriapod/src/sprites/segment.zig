@@ -6,9 +6,9 @@ const ZigGame = zgame.ZigGame; // context
 const sdl = @import("zgame").sdl;
 const zgzero = @import("../zgzero/zgzero.zig");
 const canvases = zgzero.canvases;
-const gc = @import("../game_common.zig");
+const GAME = @import("../game.zig");
 
-fn to_sz(dir: gc.Direction) usize {
+fn to_sz(dir: GAME.Direction) usize {
     switch (dir) {
         .UP => return 0,
         .RIGHT => return 1,
@@ -17,7 +17,7 @@ fn to_sz(dir: gc.Direction) usize {
     }
 }
 
-fn to_i32(dir: gc.Direction) i32 {
+fn to_i32(dir: GAME.Direction) i32 {
     switch (dir) {
         .UP => return 0,
         .RIGHT => return 1,
@@ -26,17 +26,17 @@ fn to_i32(dir: gc.Direction) i32 {
     }
 }
 
-fn inverse_direction(dir: gc.Direction) gc.Direction {
+fn inverse_direction(dir: GAME.Direction) GAME.Direction {
     switch (dir) {
-        .UP => return gc.Direction.DOWN,
-        .DOWN => return gc.Direction.UP,
-        .LEFT => return gc.Direction.RIGHT,
-        .RIGHT => return gc.Direction.LEFT,
+        .UP => return GAME.Direction.DOWN,
+        .DOWN => return GAME.Direction.UP,
+        .LEFT => return GAME.Direction.RIGHT,
+        .RIGHT => return GAME.Direction.LEFT,
     }
 }
 
-fn is_horizontal(dir: gc.Direction) bool {
-    return dir == gc.Direction.LEFT or dir == gc.Direction.RIGHT;
+fn is_horizontal(dir: GAME.Direction) bool {
+    return dir == GAME.Direction.LEFT or dir == GAME.Direction.RIGHT;
 }
 
 const DX = [_]i32{ 0, 1, 0, -1 };
@@ -52,8 +52,6 @@ const ROTATION_MATRICES = [4][4]i32{
     [_]i32{ 0, 1, -1, 0 },
 };
 
-const rank_fn = fn (*Segment, i32) i32;
-
 const Ranking = packed struct {
     same_as_previous_x_direction: u1,
     horizontal_blocked: u1,
@@ -64,7 +62,8 @@ const Ranking = packed struct {
     out: u1,
 };
 
-fn rank_dirs(dirs: [4]gc.Direction, ranks: [4]Ranking) gc.Direction {
+// TODO: unkludge
+fn rank_dirs(dirs: [4]GAME.Direction, ranks: [4]Ranking) GAME.Direction {
     var _0 = @bitCast(u7, ranks[0]);
     var _1 = @bitCast(u7, ranks[1]);
     var _2 = @bitCast(u7, ranks[2]);
@@ -85,11 +84,11 @@ fn rank_dirs(dirs: [4]gc.Direction, ranks: [4]Ranking) gc.Direction {
     return dirs[idx];
 }
 
-fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Ranking {
+fn ranker(seg: *Segment, game: *GAME.Game, proposed_out_edge: GAME.Direction) Ranking {
     var new_cell_x = seg.cell_x + DX[to_sz(proposed_out_edge)];
     var new_cell_y = seg.cell_y + DY[to_sz(proposed_out_edge)];
 
-    var out = new_cell_x < 0 or new_cell_x > (gc.NUM_GRID_COLS - 1) or (new_cell_y < 0) or new_cell_y > (gc.NUM_GRID_ROWS - 1);
+    var out = new_cell_x < 0 or new_cell_x > (GAME.NUM_GRID_COLS - 1) or (new_cell_y < 0) or new_cell_y > (GAME.NUM_GRID_ROWS - 1);
 
     var turning_back_on_self = proposed_out_edge == seg.in_edge;
 
@@ -104,8 +103,8 @@ fn ranker(seg: *Segment, game: *gc.Game, proposed_out_edge: gc.Direction) Rankin
     }
 
     var rock_present: bool = rock != 0;
-    var o1: gc.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y, .dir = null };
-    var o2: gc.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y, .dir = proposed_out_edge };
+    var o1: GAME.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y, .dir = null };
+    var o2: GAME.Occupied.Item = .{ .x = new_cell_x, .y = new_cell_y, .dir = proposed_out_edge };
 
     var occupied_by_segment = game.occupied.in(&o1) or game.occupied.in(&o2);
 
@@ -141,11 +140,11 @@ pub const Segment = struct {
     fast: bool,
 
     head: bool, // Should this segment use the head sprite?
-    in_edge: gc.Direction = gc.Direction.LEFT,
-    out_edge: gc.Direction = gc.Direction.RIGHT,
+    in_edge: GAME.Direction = GAME.Direction.LEFT,
+    out_edge: GAME.Direction = GAME.Direction.RIGHT,
 
-    disallow_direction: gc.Direction = gc.Direction.UP, // Prevents segment from moving in a particular direction
-    previous_x_direction: gc.Direction = gc.Direction.RIGHT, // Used to create winding/snaking motion
+    disallow_direction: GAME.Direction = GAME.Direction.UP, // Prevents segment from moving in a particular direction
+    previous_x_direction: GAME.Direction = GAME.Direction.RIGHT, // Used to create winding/snaking motion
 
     frames: zgame.Canvas.List,
     anim_idx: usize = 0,
@@ -171,7 +170,7 @@ pub const Segment = struct {
         //self.canvas.texture.destroy();
     }
 
-    pub fn update(self: *Self, game: *gc.Game) void {
+    pub fn update(self: *Self, game: *GAME.Game) void {
         var phase: usize = game.time.count % 16;
         var out_edge_sz: usize = @enumToInt(self.out_edge);
 
@@ -181,24 +180,24 @@ pub const Segment = struct {
 
             self.in_edge = inverse_direction(self.out_edge);
 
-            var ylimit: i32 = if (game.state == gc.Game.State.MENU) 0 else 18;
+            var ylimit: i32 = if (game.state == GAME.State.MENU) 0 else 18;
 
             if (self.cell_y == ylimit)
-                self.disallow_direction = gc.Direction.UP;
+                self.disallow_direction = GAME.Direction.UP;
 
             if (self.cell_y == 18) // TODO: handle attract screen where the y limit is 0
-                self.disallow_direction = gc.Direction.UP;
-            if (self.cell_y == gc.NUM_GRID_ROWS - 1)
-                self.disallow_direction = gc.Direction.DOWN;
+                self.disallow_direction = GAME.Direction.UP;
+            if (self.cell_y == GAME.NUM_GRID_ROWS - 1)
+                self.disallow_direction = GAME.Direction.DOWN;
         } else if (phase == 4) {
             // TODO: fix this
-            var dirs = [_]gc.Direction{ gc.Direction.UP, gc.Direction.RIGHT, gc.Direction.DOWN, gc.Direction.LEFT };
+            var dirs = [_]GAME.Direction{ GAME.Direction.UP, GAME.Direction.RIGHT, GAME.Direction.DOWN, GAME.Direction.LEFT };
 
             var ranks = [_]Ranking{
-                ranker(self, game, gc.Direction.UP),
-                ranker(self, game, gc.Direction.RIGHT),
-                ranker(self, game, gc.Direction.DOWN),
-                ranker(self, game, gc.Direction.LEFT),
+                ranker(self, game, GAME.Direction.UP),
+                ranker(self, game, GAME.Direction.RIGHT),
+                ranker(self, game, GAME.Direction.DOWN),
+                ranker(self, game, GAME.Direction.LEFT),
             };
 
             self.out_edge = rank_dirs(dirs, ranks);
@@ -210,7 +209,7 @@ pub const Segment = struct {
             var new_cell_x = self.cell_x + DX[out_edge_sz];
             var new_cell_y = self.cell_y + DY[out_edge_sz];
 
-            // if (new_cell_x >= 0 and new_cell_x < gc.num_grid_cols)
+            // if (new_cell_x >= 0 and new_cell_x < GAME.num_grid_cols)
             //     game.damage(new_cell_x, new_cell_y, 5);
 
             _ = game.occupied.add(.{ .x = new_cell_x, .y = new_cell_y, .dir = null }) catch return;
@@ -231,7 +230,7 @@ pub const Segment = struct {
         // TODO: fix offset_y
         offset_y = 0;
 
-        var pos = gc.cell2posOff(self.cell_x, self.cell_y, offset_x, offset_y);
+        var pos = GAME.cell2posOff(self.cell_x, self.cell_y, offset_x, offset_y);
         self.x = pos.x;
         self.y = pos.y;
 

@@ -5,7 +5,7 @@ const sdl = @import("zgame").sdl;
 const zgzero = @import("../zgzero/zgzero.zig");
 const canvases = zgzero.canvases;
 const Prng = std.rand.DefaultPrng;
-const gc = @import("../game_common.zig");
+const GAME = @import("../game.zig");
 
 // TODO: make this a template
 pub fn rand_range(prng: *Prng, low: i32, high: i32) i32 {
@@ -86,7 +86,7 @@ pub const FlyingEnemy = struct {
         self.health = 1;
     }
 
-    pub fn update(self: *Self, game: *gc.Game) void {
+    pub fn update(self: *Self, game: *GAME.Game) void {
 
         // Move
         self.x += self.dx * self.moving_x * (3 - @floatToInt(i32, @fabs(@intToFloat(f32, self.dy))));

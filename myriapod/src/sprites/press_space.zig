@@ -4,7 +4,7 @@ const ZigGame = zgame.ZigGame; // context
 const sdl = @import("zgame").sdl;
 const zgzero = @import("../zgzero/zgzero.zig");
 const canvases = zgzero.canvases;
-const gc = @import("../game_common.zig");
+const GAME = @import("../game.zig");
 
 pub const PressSpace = struct {
     const Self = PressSpace;
@@ -29,7 +29,7 @@ pub const PressSpace = struct {
         //self.canvas.texture.destroy();
     }
 
-    pub fn update(self: *Self, game: *gc.Game) void {
+    pub fn update(self: *Self, game: *GAME.Game) void {
         _ = game;
         self.anim_idx = (self.anim_idx + 1) % self.frames.items.len;
     }

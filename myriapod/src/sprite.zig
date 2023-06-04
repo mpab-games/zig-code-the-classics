@@ -10,7 +10,7 @@ const FlyingEnemy = @import("sprites/flying_enemy.zig").FlyingEnemy;
 const Segment = @import("sprites/segment.zig").Segment;
 const Player = @import("sprites/player.zig").Player;
 const Rock = @import("sprites/rock.zig").Rock;
-const gc = @import("game_common.zig");
+const GAME = @import("game.zig");
 
 // Facade pattern
 pub const Sprite = union(enum) { // Facade
@@ -136,7 +136,7 @@ pub const Sprite = union(enum) { // Facade
         }
     }
 
-    pub fn update(self: *Sprite, game: *gc.Game) void {
+    pub fn update(self: *Sprite, game: *GAME.Game) void {
         switch (self.*) {
             .player => |*s| s.update(game),
             .flying_enemy => |*s| s.update(game),
@@ -191,7 +191,7 @@ const Bullet = struct {
         self.canvas.texture.destroy();
     }
 
-    pub fn update(self: *Self, game: *gc.Game) void {
+    pub fn update(self: *Self, game: *GAME.Game) void {
         self.y += self.dy;
         _ = game;
     }
