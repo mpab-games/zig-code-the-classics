@@ -228,6 +228,7 @@ const state_game_over = struct {
 };
 
 fn run_game(gctx: *GameContext) !bool {
+    gctx.game.occupied.list.clearAndFree();
     gctx.input = .{}; // clear last events
     gctx.game.time.tick();
 
