@@ -8,6 +8,7 @@
 - rocks
 - grid damage
 - bugfix: segment pieces do not follow head
+- bugfix: segment movement logic (have to compare with python version...)
 - music
 - changing background
 - player sprite animation

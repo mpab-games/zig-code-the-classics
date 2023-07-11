@@ -180,12 +180,9 @@ pub const Segment = struct {
 
             self.in_edge = inverse_direction(self.out_edge);
 
+            // handle attract screen where the y limit is 0
             var ylimit: i32 = if (game.state == GAME.State.MENU) 0 else 18;
-
             if (self.cell_y == ylimit)
-                self.disallow_direction = GAME.Direction.UP;
-
-            if (self.cell_y == 18) // TODO: handle attract screen where the y limit is 0
                 self.disallow_direction = GAME.Direction.UP;
             if (self.cell_y == GAME.NUM_GRID_ROWS - 1)
                 self.disallow_direction = GAME.Direction.DOWN;
@@ -227,7 +224,7 @@ pub const Segment = struct {
         offset_x = offset_x * rotation_matrix[0] + offset_y * rotation_matrix[1];
         offset_y = offset_x * rotation_matrix[2] + offset_y * rotation_matrix[3];
 
-        // TODO: fix offset_y
+        // TODO: fix offset_y logic
         offset_y = 0;
 
         var pos = GAME.cell2posOff(self.cell_x, self.cell_y, offset_x, offset_y);

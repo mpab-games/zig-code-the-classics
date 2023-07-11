@@ -70,7 +70,8 @@ const GameContext = struct {
             .factory = SpriteFactory.init(zg),
         };
 
-        var player_sprite = try SpriteFactory.player.new(gctx.factory, 0, 0);
+        // state with player sprite off-screen
+        var player_sprite = try SpriteFactory.player.new(gctx.factory, -100, -100);
         gctx.player = try gctx.playfield.add(player_sprite);
 
         var enemy_sprite = try SpriteFactory.flying_enemy.new(gctx.factory, 100);
@@ -91,9 +92,10 @@ const GameContext = struct {
     fn add_segments(self: *Self) !void {
         var num_segments = 8 + ((self.wave >> 2) << 1); // On the first four waves there are 8 segments - then 10, and so on
         for (range(num_segments)) |_, i| {
-            var cell_x: i32 = 8 - @intCast(i32, i);
-            //var cell_x: i32 = -1 - @intCast(i32, i);
-            var cell_y: i32 = 0;
+            //var cell_x: i32 = 8 - @intCast(i32, i);
+            var cell_x: i32 = -1 - @intCast(i32, i);
+            //var cell_y: i32 = 0;
+            var cell_y: i32 = 16;
             // Determines whether segments take one or two hits to kill, based on the wave number.
             // e.g. on wave 0 all segments take one hit; on wave 1 they alternate between one and two hits
             var health: i32 = 1; //[[1,1],[1,2],[2,2],[1,1]][self.wave % 4][i % 2];
@@ -134,6 +136,7 @@ const state_menu = struct {
                 var pd = player_sprite.get();
                 pd.x = GAME.PLYR_START_X;
                 pd.y = GAME.PLYR_START_Y;
+                pd.state = 1;
                 player_sprite.set(pd);
             }
         }
