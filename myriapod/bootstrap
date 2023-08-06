@@ -61,7 +61,7 @@ elif [ ! "$DISTRO_NAME" = "${DISTRO_NAME#Debian}" ]; then
   # WSL2/Debian dependencies
   sudo apt-get install -y automake libfreetype-dev libfreetype6 libfreetype6-dev libharfbuzz-dev
 else
-  echo unhandled distro: $DISTRO_NAME
+  echo unhandled distro: "$DISTRO_NAME"
 fi
 
 ./generate-assets
