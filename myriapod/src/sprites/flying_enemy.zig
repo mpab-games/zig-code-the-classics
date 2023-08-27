@@ -41,7 +41,7 @@ pub const FlyingEnemy = struct {
         var frames = zgame.Canvas.List.init(std.heap.page_allocator);
         try canvases.meanie_list(&frames, zg.renderer);
 
-        const seed = @truncate(u64, @bitCast(u128, std.time.nanoTimestamp()));
+        const seed = @as(u64, @truncate(@as(u128, @bitCast(std.time.nanoTimestamp()))));
         var prng = std.rand.DefaultPrng.init(seed);
 
         var fe: FlyingEnemy = .{
@@ -75,7 +75,7 @@ pub const FlyingEnemy = struct {
         var ud = [_]i32{ -1, 1 };
         var dy: i32 = choice(&self.prng, &ud); // Start moving either up or down
 
-        var e_type = @intCast(usize, rand_range(&self.prng, 0, 2) * 3);
+        var e_type = @as(usize, @intCast(rand_range(&self.prng, 0, 2) * 3));
 
         self.x = x;
         self.y = y;
@@ -89,8 +89,8 @@ pub const FlyingEnemy = struct {
     pub fn update(self: *Self, game: *GAME.Game) void {
 
         // Move
-        self.x += self.dx * self.moving_x * (3 - @floatToInt(i32, @fabs(@intToFloat(f32, self.dy))));
-        self.y += self.dy * (3 - @floatToInt(i32, @fabs(@intToFloat(f32, self.dx * self.moving_x))));
+        self.x += self.dx * self.moving_x * (3 - @as(i32, @intFromFloat(@fabs(@as(f32, @floatFromInt(self.dy))))));
+        self.y += self.dy * (3 - @as(i32, @intFromFloat(@fabs(@as(f32, @floatFromInt(self.dx * self.moving_x))))));
 
         if (self.y < 592 or self.y > 784) {
             // Gone too high or low - reverse y direction

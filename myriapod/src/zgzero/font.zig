@@ -40,8 +40,8 @@ pub const Font = struct {
         }
 
         var font_rw = c.SDL_RWFromConstMem(
-            @ptrCast(*const anyopaque, &arcade_font[0]),
-            @intCast(c_int, arcade_font.len),
+            @as(*const anyopaque, @ptrCast(&arcade_font[0])),
+            @as(c_int, @intCast(arcade_font.len)),
         ) orelse {
             c.SDL_Log("FAIL RWFromConstMem: %s", c.SDL_GetError());
             return error.SDLInitializationFailed;

@@ -18,14 +18,14 @@ pub const cast = struct {
     u64: u64,
     pub fn _(val: anytype) cast {
         return cast{
-            .i8 = @intCast(i8, val),
-            .i16 = @intCast(i16, val),
-            .i32 = @intCast(i32, val),
-            .i64 = @intCast(i64, val),
-            .u8 = @intCast(u8, val),
-            .u16 = @intCast(u16, val),
-            .u32 = @intCast(u32, val),
-            .u64 = @intCast(u64, val),
+            .i8 = @as(i8, @intCast(val)),
+            .i16 = @as(i16, @intCast(val)),
+            .i32 = @as(i32, @intCast(val)),
+            .i64 = @as(i64, @intCast(val)),
+            .u8 = @as(u8, @intCast(val)),
+            .u16 = @as(u16, @intCast(val)),
+            .u32 = @as(u32, @intCast(val)),
+            .u64 = @as(u64, @intCast(val)),
         };
     }
 };

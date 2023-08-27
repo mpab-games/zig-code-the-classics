@@ -7,7 +7,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "breakout",
+        .name = "zyriapod",
         .root_source_file = .{ .path = "src/main.zig" },
         .target = target,
         .optimize = optimize,
@@ -26,14 +26,18 @@ pub fn build(b: *std.Build) void {
     if (exe.target.isWindows()) {
         try_vckpg = false;
         const vcpkg_root = "./vcpkg_installed/x64-windows";
-        exe.addIncludePath(vcpkg_root ++ "/include");
-        exe.addLibraryPath(vcpkg_root ++ "/lib");
+        // exe.addIncludePath(vcpkg_root ++ "/include");
+        exe.addIncludePath(.{ .cwd_relative = vcpkg_root ++ "/include" });
+        // exe.addLibraryPath(vcpkg_root ++ "/lib");
+        exe.addLibraryPath(.{ .cwd_relative = vcpkg_root ++ "/lib" });
         var source_path = vcpkg_root ++ "/bin";
         var dest_path = "./bin";
         installFiles(b, source_path, dest_path, &.{
             "ogg.dll",
+            "libpng16.dll",
             "SDL2_mixer.dll",
             "SDL2_ttf.dll",
+            "SDL2_image.dll",
             "SDL2.dll",
             "vorbis.dll",
             "vorbisfile.dll",
@@ -45,8 +49,10 @@ pub fn build(b: *std.Build) void {
     if (exe.target.isDarwin()) {
         try_vckpg = false;
         const vcpkg_root = "./vcpkg_installed/x64-osx";
-        exe.addIncludePath(vcpkg_root ++ "/include");
-        exe.addLibraryPath(vcpkg_root ++ "/lib");
+        // exe.addIncludePath(vcpkg_root ++ "/include");
+        exe.addIncludePath(.{ .cwd_relative = vcpkg_root ++ "/include" });
+        // exe.addLibraryPath(vcpkg_root ++ "/lib");
+        exe.addLibraryPath(.{ .cwd_relative = vcpkg_root ++ "/lib" });
 
         exe.linkSystemLibrary("freetype");
         exe.linkSystemLibrary("ogg");
@@ -58,8 +64,11 @@ pub fn build(b: *std.Build) void {
 
     if (exe.target.isLinux()) {
         try_vckpg = false;
-        exe.addIncludePath("/usr/include");
-        exe.addLibraryPath("/usr/lib");
+        // exe.addIncludePath("/usr/include");
+        // exe.addLibraryPath("/usr/lib");
+
+        exe.addIncludePath(.{ .cwd_relative = "/usr/include" });
+        exe.addLibraryPath(.{ .cwd_relative = "/usr/lib" });
 
         exe.linkSystemLibrary("freetype");
         exe.linkSystemLibrary("ogg");
@@ -74,6 +83,7 @@ pub fn build(b: *std.Build) void {
     }
 
     exe.linkSystemLibrary("SDL2");
+    exe.linkSystemLibrary("SDL2_image");
     exe.linkSystemLibrary("SDL2_mixer");
     exe.linkSystemLibrary("SDL2_ttf");
 
@@ -86,12 +96,12 @@ pub fn build(b: *std.Build) void {
 
     // zig-game library
     const zig_game_module = b.createModule(.{
-        .source_file = .{ .path = "./libs/zig_game/src/zig_game.zig" },
+        .source_file = .{ .path = "./libs/zig_game/src/zgame.zig" },
         .dependencies = &.{
             .{ .name = "sdl-wrapper", .module = sdl_wrapper_module },
         },
     });
-    exe.addModule("zig-game", zig_game_module);
+    exe.addModule("zgame", zig_game_module);
 
     // tests
     const exe_tests = b.addTest(.{

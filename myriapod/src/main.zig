@@ -91,9 +91,9 @@ const GameContext = struct {
 
     fn add_segments(self: *Self) !void {
         var num_segments = 8 + ((self.wave >> 2) << 1); // On the first four waves there are 8 segments - then 10, and so on
-        for (range(num_segments)) |_, i| {
+        for (range(num_segments), 0..) |_, i| {
             //var cell_x: i32 = 8 - @intCast(i32, i);
-            var cell_x: i32 = -1 - @intCast(i32, i);
+            var cell_x: i32 = -1 - @as(i32, @intCast(i));
             //var cell_y: i32 = 0;
             var cell_y: i32 = 16;
             // Determines whether segments take one or two hits to kill, based on the wave number.
@@ -181,8 +181,8 @@ const state_play = struct {
             var key = gctx.input.ie_key_down.val.event.key_down;
             var scancode = key.scancode;
 
-            var dx: i32 = @as(i32, @boolToInt(scancode == sdl.Scancode.right)) - @as(i32, @boolToInt(scancode == sdl.Scancode.left));
-            var dy: i32 = @as(i32, @boolToInt(scancode == sdl.Scancode.down)) - @as(i32, @boolToInt(scancode == sdl.Scancode.up));
+            var dx: i32 = @as(i32, @intFromBool(scancode == sdl.Scancode.right)) - @as(i32, @intFromBool(scancode == sdl.Scancode.left));
+            var dy: i32 = @as(i32, @intFromBool(scancode == sdl.Scancode.down)) - @as(i32, @intFromBool(scancode == sdl.Scancode.up));
 
             player_data.x += dx;
             player_data.y += dy;

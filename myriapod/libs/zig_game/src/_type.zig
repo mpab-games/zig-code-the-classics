@@ -19,8 +19,8 @@ pub const Canvas = struct {
             sdl.image.ImgFormat.png,
         );
         var inf = try texture.query();
-        var width = @intCast(i32, inf.width);
-        var height = @intCast(i32, inf.height);
+        var width = @as(i32, @intCast(inf.width));
+        var height = @as(i32, @intCast(inf.height));
         return Canvas.init(texture, width, height);
     }
 

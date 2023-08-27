@@ -56,7 +56,7 @@ pub const ZigGame = struct {
     pub fn init(title: [*c]const u8, window_width: u32, window_height: u32) !ZigGame {
         _init();
 
-        var raw_window_ptr = c.SDL_CreateWindow(title, c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, @intCast(c_int, window_width), @intCast(c_int, window_height), 0) orelse c_sdl_panic();
+        var raw_window_ptr = c.SDL_CreateWindow(title, c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, @as(c_int, @intCast(window_width)), @as(c_int, @intCast(window_height)), 0) orelse c_sdl_panic();
 
         var window = sdl.Window{ .ptr = raw_window_ptr };
         var raw_renderer_ptr = c.SDL_CreateRenderer(raw_window_ptr, 0, c.SDL_RENDERER_PRESENTVSYNC) orelse c_sdl_panic();
@@ -83,7 +83,7 @@ pub const ZigGame = struct {
     }
 
     pub fn create_surface(self: ZigGame, width: u32, height: u32) !sdl.Surface {
-        return sdl.createRgbSurfaceWithFormat(@intCast(u31, width), @intCast(u31, height), self.format) catch |err| return err;
+        return sdl.createRgbSurfaceWithFormat(@as(u31, @intCast(width)), @as(u31, @intCast(height)), self.format) catch |err| return err;
     }
 
     pub fn create_texture(self: ZigGame, width: u32, height: u32) !sdl.Texture {
@@ -95,16 +95,16 @@ pub const ZigGame = struct {
     pub fn create_raw_texture(self: ZigGame, width: u32, height: u32) !*c.SDL_Texture {
         const ptr = c.SDL_CreateTexture(
             self.renderer.ptr,
-            @enumToInt(self.format),
-            @enumToInt(sdl.Texture.Access.target),
-            @intCast(c_int, width),
-            @intCast(c_int, height),
+            @intFromEnum(self.format),
+            @intFromEnum(sdl.Texture.Access.target),
+            @as(c_int, @intCast(width)),
+            @as(c_int, @intCast(height)),
         ) orelse return error.SdlError;
         return ptr;
     }
 
     pub fn create_canvas(self: *ZigGame, width: i32, height: i32) !Canvas {
-        var texture = try sdl.createTexture(self.renderer, self.format, sdl.Texture.Access.target, @intCast(u32, width), @intCast(u32, height));
+        var texture = try sdl.createTexture(self.renderer, self.format, sdl.Texture.Access.target, @as(u32, @intCast(width)), @as(u32, @intCast(height)));
         return Canvas.init(texture, width, height);
     }
 
@@ -126,17 +126,17 @@ pub const ZigGame = struct {
         const r = zg.renderer;
         try r.setTarget(canvas.texture);
 
-        var dd = 1.0 / @intToFloat(f32, canvas.height);
+        var dd = 1.0 / @as(f32, @floatFromInt(canvas.height));
 
-        var sr: f32 = @intToFloat(f32, start.r);
-        var sg: f32 = @intToFloat(f32, start.g);
-        var sb: f32 = @intToFloat(f32, start.b);
-        var sa: f32 = @intToFloat(f32, start.a);
+        var sr: f32 = @as(f32, @floatFromInt(start.r));
+        var sg: f32 = @as(f32, @floatFromInt(start.g));
+        var sb: f32 = @as(f32, @floatFromInt(start.b));
+        var sa: f32 = @as(f32, @floatFromInt(start.a));
 
-        var er: f32 = @intToFloat(f32, end.r);
-        var eg: f32 = @intToFloat(f32, end.g);
-        var eb: f32 = @intToFloat(f32, end.b);
-        var ea: f32 = @intToFloat(f32, end.a);
+        var er: f32 = @as(f32, @floatFromInt(end.r));
+        var eg: f32 = @as(f32, @floatFromInt(end.g));
+        var eb: f32 = @as(f32, @floatFromInt(end.b));
+        var ea: f32 = @as(f32, @floatFromInt(end.a));
 
         //surface = pygame.Surface((1, height)).convert_alpha()
 
@@ -147,17 +147,17 @@ pub const ZigGame = struct {
 
         var y: i32 = start_y;
         while (y != end_y) : (y += 1) {
-            var fy = @intToFloat(f32, y);
+            var fy = @as(f32, @floatFromInt(y));
             var fgr = sr + rm * fy;
             var fgg = sg + gm * fy;
             var fgb = sb + bm * fy;
             var fga = sa + am * fy;
 
             var gcolor = sdl.Color.rgba(
-                @floatToInt(u8, fgr),
-                @floatToInt(u8, fgg),
-                @floatToInt(u8, fgb),
-                @floatToInt(u8, fga),
+                @as(u8, @intFromFloat(fgr)),
+                @as(u8, @intFromFloat(fgg)),
+                @as(u8, @intFromFloat(fgb)),
+                @as(u8, @intFromFloat(fga)),
             );
 
             try r.setColor(gcolor);

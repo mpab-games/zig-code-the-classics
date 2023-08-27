@@ -10,8 +10,8 @@ pub const Sound = struct {
 
     pub fn init(audio_file: [:0]const u8) !Sound {
         const audio_rw = c.SDL_RWFromConstMem(
-            @ptrCast(*const anyopaque, audio_file),
-            @intCast(c_int, audio_file.len),
+            @as(*const anyopaque, @ptrCast(audio_file)),
+            @as(c_int, @intCast(audio_file.len)),
         ) orelse {
             c.SDL_Log("Unable to get RWFromConstMem: %s", c.SDL_GetError());
             return error.SDLInitializationFailed;

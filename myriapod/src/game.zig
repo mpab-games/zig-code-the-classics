@@ -158,15 +158,15 @@ pub const Game = struct {
         ) catch return;
         defer std.heap.page_allocator.free(score_str);
 
-        for (range(score_str.len)) |_, i| {
+        for (range(score_str.len), 0..) |_, i| {
             var digit = score_str[score_str.len - i - 1] - '0';
-            self.digits_images.draw(digit, @intCast(i32, 468 - i * 24) - 24, 5);
+            self.digits_images.draw(digit, @as(i32, @intCast(468 - i * 24)) - 24, 5);
         }
     }
 
     pub fn draw_lives(self: *Self) void {
-        for (range(@intCast(usize, self.player_lives))) |_, i| {
-            self.player_life_image.blit_at(self.zg.renderer, @intCast(i32, i * 40 + 8), 4);
+        for (range(@as(usize, @intCast(self.player_lives))), 0..) |_, i| {
+            self.player_life_image.blit_at(self.zg.renderer, @as(i32, @intCast(i * 40 + 8)), 4);
         }
     }
 };

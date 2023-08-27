@@ -3,7 +3,7 @@ pub const sdl = @import("sdl-wrapper"); // configured in build.zig
 fn clamp(v: i16) u8 {
     if (v > 255) return 255;
     if (v < 0) return 0;
-    return @intCast(u8, v);
+    return @as(u8, @intCast(v));
 }
 
 pub fn saturate(in: sdl.Color, level: i16) sdl.Color {

@@ -2,8 +2,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 const info = std.log.info;
 
-const build_impl = @import("./build-0.10.1.zig");
-
 // in version 011, Builder is an alias for Build
 pub fn build(b: *std.build.Builder) void {
     if (builtin.zig_version.major < 1) {

@@ -34,7 +34,7 @@ pub fn render(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8, color
 
 pub fn render_centered(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: u8, color: zgame.sdl.Color) !void {
     try zg.renderer.setColor(color);
-    var center_x: i32 = x - @intCast(i32, (text.len * font.info.width * scaling) / 2);
+    var center_x: i32 = x - @as(i32, @intCast((text.len * font.info.width * scaling) / 2));
     var center_y: i32 = y - (font.info.height * scaling) / 2;
     var dx: i32 = 0;
     for (text) |letter| {
@@ -45,8 +45,8 @@ pub fn render_centered(zg: *ZigGame, text: []const u8, x: i32, y: i32, scaling: 
 
 // uses color alpha to determine transparency
 pub fn old_create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: zgame.sdl.Color) !_type.Canvas {
-    var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
-    var h: i32 = @intCast(i32, font.info.height * scaling);
+    var w: i32 = @as(i32, @intCast(text.len * font.info.width * scaling));
+    var h: i32 = @as(i32, @intCast(font.info.height * scaling));
     var canvas = if (color.a == 0) try zg.create_transparent_canvas(w, h, color) else try zg.create_canvas(w, h);
     try zg.renderer.setTarget(canvas.texture);
     var solid_color = color;
@@ -62,8 +62,8 @@ pub fn old_create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color
 }
 
 pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: zgame.sdl.Color) !_type.Canvas {
-    var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
-    var h: i32 = @intCast(i32, font.info.height * scaling);
+    var w: i32 = @as(i32, @intCast(text.len * font.info.width * scaling));
+    var h: i32 = @as(i32, @intCast(font.info.height * scaling));
 
     var canvas = try zg.create_canvas(w, h);
     try zg.renderer.setTarget(canvas.texture);
@@ -82,8 +82,8 @@ pub fn create_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, color: zg
 }
 
 pub fn create_gradient_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, start: zgame.sdl.Color, end: zgame.sdl.Color) !_type.Canvas {
-    var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
-    var h: i32 = @intCast(i32, font.info.height * scaling);
+    var w: i32 = @as(i32, @intCast(text.len * font.info.width * scaling));
+    var h: i32 = @as(i32, @intCast(font.info.height * scaling));
 
     var canvas = try zg.create_canvas(w, h);
     try zg.fill_vertical_gradient(canvas, start, end, 0, h);
@@ -103,8 +103,8 @@ pub fn create_gradient_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, 
 }
 
 pub fn create_dual_gradient_text_canvas(zg: *ZigGame, text: []const u8, scaling: u8, start1: zgame.sdl.Color, end1: zgame.sdl.Color, start2: zgame.sdl.Color, end2: zgame.sdl.Color) !_type.Canvas {
-    var w: i32 = @intCast(i32, text.len * font.info.width * scaling);
-    var h: i32 = @intCast(i32, font.info.height * scaling);
+    var w: i32 = @as(i32, @intCast(text.len * font.info.width * scaling));
+    var h: i32 = @as(i32, @intCast(font.info.height * scaling));
 
     var canvas = try zg.create_canvas(w, h);
     try zg.fill_vertical_gradient(canvas, start1, end1, 0, (h >> 1));

@@ -64,10 +64,10 @@ const Ranking = packed struct {
 
 // TODO: unkludge
 fn rank_dirs(dirs: [4]GAME.Direction, ranks: [4]Ranking) GAME.Direction {
-    var _0 = @bitCast(u7, ranks[0]);
-    var _1 = @bitCast(u7, ranks[1]);
-    var _2 = @bitCast(u7, ranks[2]);
-    var _3 = @bitCast(u7, ranks[3]);
+    var _0 = @as(u7, @bitCast(ranks[0]));
+    var _1 = @as(u7, @bitCast(ranks[1]));
+    var _2 = @as(u7, @bitCast(ranks[2]));
+    var _3 = @as(u7, @bitCast(ranks[3]));
     var idx: usize = 1;
 
     if (_0 <= _1 and _0 <= _2 and _0 <= _3)
@@ -99,7 +99,7 @@ fn ranker(seg: *Segment, game: *GAME.Game, proposed_out_edge: GAME.Direction) Ra
     if (out or (new_cell_y == 0 and new_cell_x < 0)) {
         rock = 0;
     } else {
-        rock = game.grid[@intCast(usize, new_cell_y)][@intCast(usize, new_cell_x)];
+        rock = game.grid[@as(usize, @intCast(new_cell_y))][@as(usize, @intCast(new_cell_x))];
     }
 
     var rock_present: bool = rock != 0;
@@ -119,13 +119,13 @@ fn ranker(seg: *Segment, game: *GAME.Game, proposed_out_edge: GAME.Direction) Ra
     var same_as_previous_x_direction = proposed_out_edge == seg.previous_x_direction;
 
     return .{
-        .out = @boolToInt(out),
-        .turning_back_on_self = @boolToInt(turning_back_on_self),
-        .direction_disallowed = @boolToInt(direction_disallowed),
-        .occupied_by_segment = @boolToInt(occupied_by_segment),
-        .rock_present = @boolToInt(rock_present),
-        .horizontal_blocked = @boolToInt(horizontal_blocked),
-        .same_as_previous_x_direction = @boolToInt(same_as_previous_x_direction),
+        .out = @intFromBool(out),
+        .turning_back_on_self = @intFromBool(turning_back_on_self),
+        .direction_disallowed = @intFromBool(direction_disallowed),
+        .occupied_by_segment = @intFromBool(occupied_by_segment),
+        .rock_present = @intFromBool(rock_present),
+        .horizontal_blocked = @intFromBool(horizontal_blocked),
+        .same_as_previous_x_direction = @intFromBool(same_as_previous_x_direction),
     };
 }
 
@@ -172,7 +172,7 @@ pub const Segment = struct {
 
     pub fn update(self: *Self, game: *GAME.Game) void {
         var phase: usize = game.time.count % 16;
-        var out_edge_sz: usize = @enumToInt(self.out_edge);
+        var out_edge_sz: usize = @intFromEnum(self.out_edge);
 
         if (phase == 0) {
             self.cell_x += DX[out_edge_sz];
@@ -198,7 +198,7 @@ pub const Segment = struct {
             };
 
             self.out_edge = rank_dirs(dirs, ranks);
-            out_edge_sz = @enumToInt(self.out_edge);
+            out_edge_sz = @intFromEnum(self.out_edge);
 
             if (is_horizontal(self.out_edge))
                 self.previous_x_direction = self.out_edge;
@@ -214,11 +214,11 @@ pub const Segment = struct {
         }
 
         var turn_idx: i32 = @mod(to_i32(self.out_edge) - to_i32(self.in_edge), 4);
-        var turn_i32: i32 = @intCast(i32, turn_idx);
+        var turn_i32: i32 = @as(i32, @intCast(turn_idx));
 
         var offset_x: i32 = SECONDARY_AXIS_POSITIONS[phase] * (2 - turn_i32);
         var stolen_y_movement: i32 = SECONDARY_AXIS_POSITIONS[phase] * @mod(turn_i32, 2);
-        var offset_y: i32 = -16 + (@intCast(i32, phase * 2)) - stolen_y_movement;
+        var offset_y: i32 = -16 + (@as(i32, @intCast(phase * 2))) - stolen_y_movement;
 
         var rotation_matrix = ROTATION_MATRICES[to_sz(self.in_edge)];
         offset_x = offset_x * rotation_matrix[0] + offset_y * rotation_matrix[1];
@@ -234,13 +234,13 @@ pub const Segment = struct {
         var direction: i32 = @mod(SECONDARY_AXIS_SPEED[phase] * (turn_idx - 2) + to_i32(self.in_edge) * 2 + 4, 8);
         var leg_frame: usize = @divTrunc(phase, 4); // 16 phase cycle, 4 frames of animation
 
-        var x128: usize = @boolToInt(self.fast);
-        var x64: usize = @boolToInt(self.health == 2);
-        var x32: usize = @boolToInt(self.head);
+        var x128: usize = @intFromBool(self.fast);
+        var x64: usize = @intFromBool(self.health == 2);
+        var x32: usize = @intFromBool(self.head);
 
         // equivalent to:
         // self.image = "seg" + str(int(self.fast)) + str(int(self.health == 2)) + str(int(self.head)) + str(direction) + str(leg_frame)
-        self.anim_idx = x128 * 128 + x64 * 64 + x32 * 32 + @intCast(usize, direction) * 4 + leg_frame;
+        self.anim_idx = x128 * 128 + x64 * 64 + x32 * 32 + @as(usize, @intCast(direction)) * 4 + leg_frame;
 
         // var img_str = std.fmt.allocPrint(
         //     std.heap.page_allocator,
