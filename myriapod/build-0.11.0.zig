@@ -33,6 +33,9 @@ pub fn build(b: *std.Build) void {
         var source_path = vcpkg_root ++ "/bin";
         var dest_path = "./bin";
         installFiles(b, source_path, dest_path, &.{
+            "brotlidec.dll",
+            "bz2.dll",
+            "freetype.dll",
             "ogg.dll",
             "libpng16.dll",
             "SDL2_mixer.dll",

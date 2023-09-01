@@ -32,3 +32,6 @@ scrap/
 
 # generated files
 __gen/
+
+# IDEs
+.vscode/
